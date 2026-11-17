@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>運転代行 日報</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0f2a4a">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--navy:#0f2a4a;--navy2:#1b3f6e;--bg:#eef2f7;--card:#fff;--line:#d5dde8;--txt:#1c2733;--sub:#5b6b7d;--green:#1e7d46;--red:#b3372f;--amber:#9a6a12}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:-apple-system,"Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif;background:var(--bg);color:var(--txt);font-size:15px}
+header{background:var(--navy);color:#fff;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:20}
+header .ttl{font-weight:700;font-size:17px}
+header button{background:transparent;border:1px solid rgba(255,255,255,.5);color:#fff;border-radius:8px;padding:5px 10px;font-size:12px}
+main{max-width:760px;margin:0 auto;padding:12px 12px 40px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:12px}
+h2{font-size:15px;margin:2px 0 10px;color:var(--navy)}
+.row{display:flex;gap:8px}
+.row>*{flex:1;min-width:0}
+label{display:block;font-size:12px;color:var(--sub);margin:8px 0 4px}
+input,select,textarea{width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;font-size:16px;background:#fff;color:var(--txt)}
+textarea{resize:vertical}
+.btn{display:inline-block;border:none;border-radius:9px;padding:11px 14px;font-size:14px;font-weight:600;cursor:pointer;text-align:center}
+.btn-main{background:var(--navy);color:#fff;width:100%}
+.btn-sub{background:#e4ebf3;color:var(--navy)}
+.btn-gps{background:var(--navy2);color:#fff;width:100%;padding:8px;font-size:13px;margin-top:6px}
+.btn-now{background:#e4ebf3;color:var(--navy);padding:8px;font-size:13px;margin-top:6px;width:100%}
+.btn-danger{background:#f6e3e1;color:var(--red)}
+.btn-small{padding:7px 10px;font-size:13px}
+.seg{display:flex;border:1px solid var(--line);border-radius:9px;overflow:hidden}
+.seg button{flex:1;padding:10px 4px;background:#fff;border:none;font-size:14px;cursor:pointer;color:var(--sub)}
+.seg button.on{background:var(--navy);color:#fff;font-weight:700}
+.seg button.on.green{background:var(--green)}
+.sum-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px 14px;font-size:14px}
+.sum-grid .k{color:var(--sub)}
+.sum-grid .v{text-align:right;font-weight:600}
+.sum-big{font-size:20px;font-weight:800;color:var(--navy)}
+.trip{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:8px;background:#fff}
+.trip .t1{font-weight:700}
+.trip .t2{color:var(--sub);font-size:13px;margin-top:2px}
+.trip .fare{font-weight:800;color:var(--navy);font-size:16px}
+.badge{display:inline-block;font-size:11px;padding:2px 7px;border-radius:99px;background:#e4ebf3;color:var(--navy);margin-left:6px;vertical-align:2px}
+.badge.island{background:#e2f2e7;color:var(--green)}
+.badge.half{background:#fdf0d5;color:var(--amber)}
+.trip .acts{display:flex;gap:8px;margin-top:8px}
+.trip .acts button{flex:1}
+.navrow{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.navrow button{background:#fff;border:1px solid var(--line);border-radius:8px;padding:9px 12px;font-size:15px}
+.navrow input{flex:1}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{border:1px solid var(--line);padding:6px 8px;text-align:left}
+th{background:#eef2f7}
+td.num,th.num{text-align:right}
+details{margin-bottom:10px}
+summary{cursor:pointer;font-weight:600;color:var(--navy);padding:6px 0}
+.msg{font-size:13px;margin:8px 0;min-height:18px}
+.msg.ok{color:var(--green)}.msg.err{color:var(--red)}
+.hidden{display:none!important}
+.batchrow{border:1px dashed var(--line);border-radius:10px;padding:10px;margin-bottom:10px}
+.batchrow .rh{font-weight:700;color:var(--navy);font-size:13px}
+#printArea{display:none}
+@media print{
+  body{background:#fff}
+  #appRoot,#loginRoot{display:none!important}
+  #printArea{display:block;color:#000;font-size:12px}
+  #printArea h1{font-size:18px;margin:0 0 6px}
+  #printArea h2{font-size:14px;color:#000;margin:14px 0 6px}
+  #printArea table{font-size:11px}
+  #printArea th{background:#eee}
+  #printArea .nw{white-space:nowrap}
+  #printArea .daybreak{page-break-before:always}
+  #printArea .sumline{margin:2px 0}
+}
+</style>
+</head>
+<body>
+<div id="loginRoot" class="hidden">
+  <header><div class="ttl">運転代行 日報</div></header>
+  <main>
+    <div class="card">
+      <h2>ログイン</h2>
+      <label>メールアドレス</label>
+      <input id="loginEmail" type="email" autocomplete="username">
+      <label>パスワード</label>
+      <input id="loginPass" type="password" autocomplete="current-password">
+      <div style="height:12px"></div>
+      <button class="btn btn-main" id="loginBtn">ログイン</button>
+      <div class="msg" id="loginMsg"></div>
+    </div>
+  </main>
+</div>
+
+<div id="appRoot" class="hidden">
+  <header>
+    <div class="ttl">運転代行 日報</div>
+    <button id="logoutBtn">ログアウト</button>
+  </header>
+  <main>
+    <!-- 日次ビュー -->
+    <div id="dayView">
+      <div class="navrow">
+        <button id="prevDay">◀</button>
+        <input type="date" id="dateInput">
+        <button id="nextDay">▶</button>
+      </div>
+      <div class="card">
+        <h2>今日のまとめ</h2>
+        <div id="daySummary"></div>
+        <div style="height:10px"></div>
+        <div class="row">
+          <button class="btn btn-sub" id="toMonthBtn">月ごとの集計を見る</button>
+          <button class="btn btn-sub" id="printDayBtn">印刷 / PDF</button>
+        </div>
+      </div>
+      <div class="card">
+        <h2>運行を追加</h2>
+        <div class="seg" id="formModeSeg">
+          <button data-mode="single" class="on">1件入力</button>
+          <button data-mode="batch">まとめ入力（最大20件）</button>
+        </div>
+        <div id="singleFormWrap"></div>
+        <div id="batchFormWrap" class="hidden"></div>
+        <div class="msg" id="formMsg"></div>
+      </div>
+      <div class="card">
+        <h2>運行一覧</h2>
+        <div id="tripList"></div>
+      </div>
+      <div class="card">
+        <h2>経費</h2>
+        <div id="expenseList"></div>
+        <div class="row">
+          <div style="flex:2"><label>内容</label><input id="expLabel" placeholder="ガソリン代 など"></div>
+          <div><label>金額</label><input id="expAmount" type="number" inputmode="numeric" placeholder="0"></div>
+        </div>
+        <div style="height:10px"></div>
+        <button class="btn btn-sub" id="expAddBtn" style="width:100%">経費を追加</button>
+        <div class="msg" id="expMsg"></div>
+      </div>
+      <div class="card">
+        <h2>その日のメモ</h2>
+        <textarea id="dayMemo" rows="3"></textarea>
+        <div style="height:10px"></div>
+        <button class="btn btn-sub" id="memoSaveBtn" style="width:100%">メモを保存</button>
+        <div class="msg" id="memoMsg"></div>
+      </div>
+      <div class="card">
+        <h2>料金表</h2>
+        <details><summary>一般料金表（令和6年11月1日改正）</summary><div id="fareTableGeneral"></div></details>
+        <details><summary>島割料金表（令和7年6月1日改正）</summary><div id="fareTableIsland"></div></details>
+      </div>
+    </div>
+
+    <!-- 月次ビュー -->
+    <div id="monthView" class="hidden">
+      <div class="navrow">
+        <button id="backToDay">← 日報に戻る</button>
+        <input type="month" id="monthInput">
+      </div>
+      <div class="card">
+        <h2>月のまとめ</h2>
+        <div id="monthSummary"></div>
+        <div style="height:10px"></div>
+        <button class="btn btn-sub" id="printMonthBtn" style="width:100%">印刷 / PDF（月次集計）</button>
+        <div style="height:8px"></div>
+        <button class="btn btn-sub" id="printMonthFullBtn" style="width:100%">月分まとめてPDF（1日ごとページ分け）</button>
+      </div>
+      <div class="card">
+        <h2>日別</h2>
+        <div id="monthDays"></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div id="printArea"></div>
+
+<script>
+const SUPABASE_URL = "https://yoqdoerdhjgygocvgkcf.supabase.co";
+const SUPABASE_KEY = "sb_publishable_dkyThIAovPIO-59BlGf86A_f7TExEeq";
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const $ = id => document.getElementById(id);
+const WD = ["日","月","火","水","木","金","土"];
+const yen = n => "¥" + Math.round(n).toLocaleString("ja-JP");
+function fmtDate(dstr){ const d=new Date(dstr+"T00:00:00"); return (d.getMonth()+1)+"月"+d.getDate()+"日（"+WD[d.getDay()]+"）"; }
+function todayStr(){ const d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+function addDays(dstr,n){ const d=new Date(dstr+"T00:00:00"); d.setDate(d.getDate()+n); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+function nowTime(){ const d=new Date(); return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0"); }
+function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+
+/* ---------- 料金計算 ---------- */
+function bandFareGeneral(km){
+  if (km == null || isNaN(km) || km < 0) km = 0;
+  const n = Math.floor(km);
+  if (n <= 20) return 2000 + 300*n;
+  return 8000 + 400*(n-20);
+}
+function bandFareIsland(km){
+  if (km == null || isNaN(km) || km < 0) km = 0;
+  if (km < 2) return 1400;
+  const n = Math.floor(km);
+  if (n <= 9) return 1400 + 200*(n-1);
+  return 3300 + 300*(n-10);
+}
+function calcFare(o){
+  const base = o.fare_type === "island" ? bandFareIsland(o.distance_km) : bandFareGeneral(o.distance_km);
+  let total = base + (o.stopover_min||0)*100 + (o.pickup_fee||0);
+  if (o.half_price) total = Math.floor(total/2);
+  return total;
+}
+const AUTO_TAGS = ["【クレジット】","【QR決済】","【島割】","【迎車500円】","【迎車1000円】","【半額】"];
+function stripTags(memo){ let m = memo||""; for (const t of AUTO_TAGS) m = m.split(t).join(""); return m.replace(/\s+/g," ").trim(); }
+function buildMemo(o){
+  const tags = [];
+  if (o.payment === "card") tags.push("【クレジット】");
+  if (o.payment === "qr") tags.push("【QR決済】");
+  if (o.fare_type === "island") tags.push("【島割】");
+  if (o.pickup_fee === 500) tags.push("【迎車500円】");
+  if (o.pickup_fee === 1000) tags.push("【迎車1000円】");
+  if (o.half_price) tags.push("【半額】");
+  const user = stripTags(o.memo||"");
+  return (tags.join(" ") + (user ? " " + user : "")).trim();
+}
+const PAY_LABEL = {cash:"現金", card:"カード", qr:"QR決済"};
+</script>
+<script>
+/* ---------- 運行フォーム ---------- */
+function segHTML(field, opts, cur){
+  return '<div class="seg" data-seg="'+field+'">' + opts.map(o =>
+    '<button type="button" data-v="'+o.v+'" class="'+(String(cur)===String(o.v)?"on":"")+'">'+o.label+'</button>').join("") + '</div>';
+}
+function tripFormHTML(v){
+  v = v || {};
+  const g = (k,d) => (v[k] != null && v[k] !== "" ? v[k] : (d||""));
+  return '<div class="tripform">'
+  + '<div class="row"><div><label>お客様名</label><input data-f="customer_name" value="'+esc(g("customer_name"))+'" placeholder="お客様名"></div>'
+  + '<div><label>車のナンバー</label><input data-f="car_number" value="'+esc(g("car_number"))+'" placeholder="例：4058"></div></div>'
+  + '<div class="row"><div><label>迎え場所</label><input data-f="pickup" value="'+esc(g("pickup"))+'"><button type="button" class="btn btn-gps" data-gps="pickup">現在地</button></div>'
+  + '<div><label>送り先</label><input data-f="destination" value="'+esc(g("destination"))+'"><button type="button" class="btn btn-gps" data-gps="destination">到着地</button></div></div>'
+  + '<div class="row"><div><label>出発時間</label><input data-f="start_time" type="time" value="'+esc(g("start_time")).slice(0,5)+'"><button type="button" class="btn btn-now" data-now="start_time">今</button></div>'
+  + '<div><label>終了時間</label><input data-f="end_time" type="time" value="'+esc(g("end_time")).slice(0,5)+'"><button type="button" class="btn btn-now" data-now="end_time">今</button></div></div>'
+  + '<div class="row"><div><label>距離（km）</label><input data-f="distance_km" type="number" step="0.1" min="0" inputmode="decimal" value="'+esc(g("distance_km"))+'"></div>'
+  + '<div><label>立ち寄り（分）</label><input data-f="stopover_min" type="number" min="0" inputmode="numeric" value="'+esc(g("stopover_min"))+'"></div></div>'
+  + '<label>料金の種類</label>' + segHTML("fare_type", [{v:"general",label:"一般料金"},{v:"island",label:"島割"}], g("fare_type","general"))
+  + '<label>迎車料金</label>' + segHTML("pickup_fee", [{v:"0",label:"なし"},{v:"500",label:"500円"},{v:"1000",label:"1,000円"}], g("pickup_fee","0"))
+  + '<div class="row"><div><label>支払い</label><select data-f="payment">'
+  +   '<option value="cash"'+(g("payment","cash")==="cash"?" selected":"")+'>現金</option>'
+  +   '<option value="card"'+(g("payment")==="card"?" selected":"")+'>カード</option>'
+  +   '<option value="qr"'+(g("payment")==="qr"?" selected":"")+'>QR決済</option></select></div>'
+  + '<div><label>半額</label><div class="seg" data-seg="half_price"><button type="button" data-v="0" class="'+(g("half_price")?"":"on")+'">なし</button><button type="button" data-v="1" class="'+(g("half_price")?"on":"")+'">半額</button></div></div></div>'
+  + '<label>料金（円）</label><input data-f="fare" type="number" min="0" inputmode="numeric" value="'+esc(g("fare"))+'">'
+  + '<div style="font-size:12px;color:var(--sub);margin-top:4px">距離から自動計算されます（手入力で上書き可） <a href="#" data-resetfare="1">自動計算に戻す</a></div>'
+  + '<label>備考（メモ）</label><input data-f="memo" value="'+esc(stripTags(g("memo")))+'">'
+  + '<div style="font-size:12px;color:var(--sub);margin-top:4px">保存時の備考：<span data-memopreview></span></div>'
+  + '</div>';
+}
+function segValue(root, field){
+  const s = root.querySelector('[data-seg="'+field+'"]');
+  const on = s ? s.querySelector("button.on") : null;
+  return on ? on.dataset.v : null;
+}
+function gatherForm(root){
+  const q = f => root.querySelector('[data-f="'+f+'"]');
+  const o = {
+    customer_name: q("customer_name").value.trim(),
+    car_number: q("car_number").value.trim(),
+    pickup: q("pickup").value.trim(),
+    destination: q("destination").value.trim(),
+    start_time: q("start_time").value || null,
+    end_time: q("end_time").value || null,
+    distance_km: parseFloat(q("distance_km").value) || 0,
+    stopover_min: parseInt(q("stopover_min").value) || 0,
+    fare_type: segValue(root,"fare_type") || "general",
+    pickup_fee: parseInt(segValue(root,"pickup_fee") || "0"),
+    half_price: segValue(root,"half_price") === "1",
+    payment: q("payment").value,
+    fare: parseInt(q("fare").value),
+    memo: q("memo").value
+  };
+  if (isNaN(o.fare)) o.fare = calcFare(o);
+  o.memo = buildMemo(o);
+  return o;
+}
+function refreshForm(root){
+  const q = f => root.querySelector('[data-f="'+f+'"]');
+  const tmp = {
+    distance_km: parseFloat(q("distance_km").value) || 0,
+    stopover_min: parseInt(q("stopover_min").value) || 0,
+    fare_type: segValue(root,"fare_type") || "general",
+    pickup_fee: parseInt(segValue(root,"pickup_fee") || "0"),
+    half_price: segValue(root,"half_price") === "1",
+    payment: q("payment").value,
+    memo: q("memo").value
+  };
+  if (!root.dataset.fareOverride) q("fare").value = calcFare(tmp);
+  const pv = root.querySelector("[data-memopreview]");
+  if (pv) pv.textContent = buildMemo(tmp) || "（なし）";
+}
+function wireForm(root){
+  root.querySelectorAll("[data-seg]").forEach(seg => {
+    seg.querySelectorAll("button").forEach(b => b.addEventListener("click", () => {
+      seg.querySelectorAll("button").forEach(x => x.classList.remove("on"));
+      b.classList.add("on");
+      refreshForm(root);
+    }));
+  });
+  root.querySelectorAll("[data-f]").forEach(el => {
+    el.addEventListener("input", () => {
+      if (el.dataset.f === "fare") root.dataset.fareOverride = "1";
+      refreshForm(root);
+    });
+  });
+  const rf = root.querySelector("[data-resetfare]");
+  if (rf) rf.addEventListener("click", e => { e.preventDefault(); delete root.dataset.fareOverride; refreshForm(root); });
+  root.querySelectorAll("[data-now]").forEach(b => b.addEventListener("click", () => {
+    root.querySelector('[data-f="'+b.dataset.now+'"]').value = nowTime();
+  }));
+  root.querySelectorAll("[data-gps]").forEach(b => b.addEventListener("click", () => gpsFill(root, b)));
+  refreshForm(root);
+}
+function gpsFill(root, btn){
+  const field = btn.dataset.gps;
+  const input = root.querySelector('[data-f="'+field+'"]');
+  const old = btn.textContent;
+  btn.textContent = "取得中…"; btn.disabled = true;
+  navigator.geolocation.getCurrentPosition(async pos => {
+    try {
+      const {latitude:lat, longitude:lon} = pos.coords;
+      const r = await fetch("https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat="+lat+"&lon="+lon+"&zoom=18&addressdetails=1", {headers:{"Accept-Language":"ja"}});
+      const j = await r.json();
+      const a = j.address || {};
+      const parts = [a.state, a.city || a.town || a.village, a.suburb || a.neighbourhood || a.quarter, (a.road||"") + (a.house_number||"")].filter(Boolean);
+      input.value = parts.length ? parts.join("") : (j.display_name || "");
+      if (!input.value) input.value = lat.toFixed(5)+", "+lon.toFixed(5);
+    } catch(e){ alert("住所の取得に失敗しました"); }
+    btn.textContent = old; btn.disabled = false;
+  }, () => { alert("位置情報が取得できませんでした"); btn.textContent = old; btn.disabled = false; }, {enableHighAccuracy:true, timeout:15000});
+}
+</script>
+<script>
+/* ---------- 日次 ---------- */
+let currentDate = todayStr();
+let dayTrips = [], dayExpenses = [];
+function totals(trips, expenses){
+  const t = {sales:0, count:trips.length, dist:0, cash:0, card:0, qr:0, islCount:0, islSum:0, halfCount:0, halfSum:0, exp:0};
+  for (const x of trips){
+    t.sales += x.fare; t.dist += Number(x.distance_km)||0;
+    if (x.payment==="cash") t.cash += x.fare; else if (x.payment==="card") t.card += x.fare; else if (x.payment==="qr") t.qr += x.fare;
+    if (x.fare_type==="island"){ t.islCount++; t.islSum += x.fare; }
+    if (x.half_price){ t.halfCount++; t.halfSum += x.fare; }
+  }
+  for (const e of expenses) t.exp += e.amount;
+  t.balance = t.sales - t.exp;
+  return t;
+}
+function summaryHTML(t){
+  return '<div class="sum-grid">'
+  + '<div class="k">売上合計</div><div class="v sum-big">'+yen(t.sales)+'</div>'
+  + '<div class="k">件数</div><div class="v">'+t.count+'件</div>'
+  + '<div class="k">走行距離</div><div class="v">'+t.dist.toFixed(1)+'km</div>'
+  + '<div class="k">現金</div><div class="v">'+yen(t.cash)+'</div>'
+  + '<div class="k">カード</div><div class="v">'+yen(t.card)+'</div>'
+  + '<div class="k">QR決済</div><div class="v">'+yen(t.qr)+'</div>'
+  + '<div class="k">島割</div><div class="v">'+t.islCount+'件／'+yen(t.islSum)+'</div>'
+  + '<div class="k">半額</div><div class="v">'+t.halfCount+'件／'+yen(t.halfSum)+'</div>'
+  + '<div class="k">経費</div><div class="v">'+yen(t.exp)+'</div>'
+  + '<div class="k">差引</div><div class="v sum-big">'+yen(t.balance)+'</div></div>';
+}
+async function loadDay(){
+  const [tr, ex, nt] = await Promise.all([
+    sb.from("trips").select("*").eq("date", currentDate).order("start_time", {ascending:true, nullsFirst:false}).order("created_at", {ascending:true}),
+    sb.from("expenses").select("*").eq("date", currentDate).order("created_at", {ascending:true}),
+    sb.from("day_notes").select("*").eq("date", currentDate).maybeSingle()
+  ]);
+  dayTrips = tr.data || []; dayExpenses = ex.data || [];
+  $("daySummary").innerHTML = summaryHTML(totals(dayTrips, dayExpenses));
+  renderTrips(); renderExpenses();
+  $("dayMemo").value = nt.data ? nt.data.memo : "";
+}
+function tripCardHTML(x){
+  const badges = (x.fare_type==="island" ? '<span class="badge island">島割</span>' : "")
+    + (x.half_price ? '<span class="badge half">半額</span>' : "")
+    + (x.pickup_fee ? '<span class="badge">迎車'+x.pickup_fee+'円</span>' : "");
+  const route = (x.pickup || "―") + " → " + (x.destination || "―");
+  const times = (x.start_time ? x.start_time.slice(0,5) : "―") + "〜" + (x.end_time ? x.end_time.slice(0,5) : "―");
+  return '<div class="t1">'+esc(x.customer_name || "（名前なし）")+(x.car_number ? ' <span style="color:var(--sub);font-weight:400">'+esc(x.car_number)+'</span>' : "")+badges+'</div>'
+  + '<div class="t2">'+esc(route)+'</div>'
+  + '<div class="t2">'+times+'／'+(Number(x.distance_km)||0).toFixed(1)+'km／'+PAY_LABEL[x.payment]+(x.memo ? '／'+esc(x.memo) : "")+'</div>'
+  + '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px"><span class="fare">'+yen(x.fare)+'</span></div>'
+  + '<div class="acts"><button class="btn btn-sub btn-small" data-edit="'+x.id+'">編集</button><button class="btn btn-danger btn-small" data-del="'+x.id+'">削除</button></div>';
+}
+function renderTrips(){
+  const w = $("tripList");
+  if (!dayTrips.length){ w.innerHTML = '<div style="color:var(--sub)">この日の運行はまだありません</div>'; return; }
+  w.innerHTML = dayTrips.map(x => '<div class="trip" id="trip-'+x.id+'">'+tripCardHTML(x)+'</div>').join("");
+  w.querySelectorAll("[data-edit]").forEach(b => b.addEventListener("click", () => startEdit(b.dataset.edit)));
+  w.querySelectorAll("[data-del]").forEach(b => b.addEventListener("click", () => delTrip(b.dataset.del)));
+}
+function startEdit(id){
+  const x = dayTrips.find(t => t.id === id); if (!x) return;
+  const card = $("trip-"+id);
+  card.innerHTML = tripFormHTML(x) + '<div class="acts"><button class="btn btn-main btn-small" data-saveedit>更新する</button><button class="btn btn-sub btn-small" data-canceledit>キャンセル</button></div><div class="msg"></div>';
+  const form = card.querySelector(".tripform");
+  wireForm(form);
+  card.querySelector("[data-saveedit]").addEventListener("click", async () => {
+    const o = gatherForm(form); o.date = currentDate;
+    const {error} = await sb.from("trips").update(o).eq("id", id);
+    if (error){ card.querySelector(".msg").textContent = "保存に失敗しました: " + error.message; card.querySelector(".msg").className = "msg err"; return; }
+    loadDay();
+  });
+  card.querySelector("[data-canceledit]").addEventListener("click", renderTrips);
+}
+async function delTrip(id){
+  if (!confirm("この記録を削除しますか？")) return;
+  const {error} = await sb.from("trips").delete().eq("id", id);
+  if (error){ alert("削除に失敗しました: " + error.message); return; }
+  loadDay();
+}
+function renderExpenses(){
+  const w = $("expenseList");
+  if (!dayExpenses.length){ w.innerHTML = '<div style="color:var(--sub)">経費はまだありません</div>'; return; }
+  w.innerHTML = dayExpenses.map(e => '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--line)"><span>'+esc(e.label)+'</span><span>'+yen(e.amount)+' <button class="btn btn-danger btn-small" data-expdel="'+e.id+'">削除</button></span></div>').join("");
+  w.querySelectorAll("[data-expdel]").forEach(b => b.addEventListener("click", async () => {
+    if (!confirm("この経費を削除しますか？")) return;
+    await sb.from("expenses").delete().eq("id", b.dataset.expdel); loadDay();
+  }));
+}
+/* 追加フォーム */
+function buildSingleForm(){
+  $("singleFormWrap").innerHTML = tripFormHTML({}) + '<div style="height:10px"></div><button class="btn btn-main" id="singleSave">保存する</button>';
+  wireForm($("singleFormWrap").querySelector(".tripform"));
+  $("singleSave").addEventListener("click", saveSingle);
+}
+function buildBatchForm(){
+  let h = "";
+  for (let i=1;i<=20;i++) h += '<div class="batchrow"><div class="rh">'+i+'件目</div>'+tripFormHTML({})+'</div>';
+  $("batchFormWrap").innerHTML = h + '<button class="btn btn-main" id="batchSave">まとめて保存する</button>';
+  $("batchFormWrap").querySelectorAll(".tripform").forEach(wireForm);
+  $("batchSave").addEventListener("click", saveBatch);
+}
+function isEmptyTrip(o){ return !o.customer_name && !o.pickup && !o.destination && !(o.distance_km>0); }
+async function saveSingle(){
+  const form = $("singleFormWrap").querySelector(".tripform");
+  const o = gatherForm(form); o.date = currentDate;
+  const msg = $("formMsg");
+  if (isEmptyTrip(o)){ msg.textContent = "何か入力してから保存してください"; msg.className = "msg err"; return; }
+  const {error} = await sb.from("trips").insert(o);
+  if (error){ msg.textContent = "保存に失敗しました: " + error.message; msg.className = "msg err"; return; }
+  msg.textContent = "保存しました"; msg.className = "msg ok";
+  buildSingleForm(); loadDay();
+}
+async function saveBatch(){
+  const rows = [];
+  $("batchFormWrap").querySelectorAll(".tripform").forEach(f => {
+    const o = gatherForm(f); o.date = currentDate;
+    if (!isEmptyTrip(o)) rows.push(o);
+  });
+  const msg = $("formMsg");
+  if (!rows.length){ msg.textContent = "入力された行がありません"; msg.className = "msg err"; return; }
+  const {error} = await sb.from("trips").insert(rows);
+  if (error){ msg.textContent = "保存に失敗しました: " + error.message; msg.className = "msg err"; return; }
+  msg.textContent = rows.length + "件を保存しました"; msg.className = "msg ok";
+  buildBatchForm(); loadDay();
+}
+</script>
+<script>
+/* ---------- 月次 ---------- */
+let monthData = null;
+async function loadMonth(){
+  const mv = $("monthInput").value; if (!mv) return;
+  const [y, m] = mv.split("-").map(Number);
+  const first = mv + "-01";
+  const next = y + "-" + String(m === 12 ? 1 : m + 1).padStart(2,"0") + "-01";
+  const nextY = m === 12 ? y + 1 : y;
+  const nextStr = (m === 12 ? nextY : y) + "-" + String(m === 12 ? 1 : m + 1).padStart(2,"0") + "-01";
+  const [tr, ex, nt] = await Promise.all([
+    sb.from("trips").select("*").gte("date", first).lt("date", nextStr).order("date", {ascending:true}).order("start_time", {ascending:true, nullsFirst:false}),
+    sb.from("expenses").select("*").gte("date", first).lt("date", nextStr),
+    sb.from("day_notes").select("*").gte("date", first).lt("date", nextStr)
+  ]);
+  const trips = tr.data || [], expenses = ex.data || [], notes = nt.data || [];
+  const byDate = {};
+  for (const x of trips){ (byDate[x.date] = byDate[x.date] || {trips:[], expenses:[], memo:""}).trips.push(x); }
+  for (const e of expenses){ (byDate[e.date] = byDate[e.date] || {trips:[], expenses:[], memo:""}).expenses.push(e); }
+  for (const n of notes){ (byDate[n.date] = byDate[n.date] || {trips:[], expenses:[], memo:""}).memo = n.memo; }
+  const dates = Object.keys(byDate).sort();
+  monthData = {y, m, trips, expenses, byDate, dates, totals: totals(trips, expenses)};
+  const t = monthData.totals;
+  $("monthSummary").innerHTML = '<div class="sum-grid">'
+    + '<div class="k">売上合計</div><div class="v sum-big">'+yen(t.sales)+'</div>'
+    + '<div class="k">件数</div><div class="v">'+t.count+'件</div>'
+    + '<div class="k">稼働日数</div><div class="v">'+dates.length+'日</div>'
+    + '<div class="k">走行距離</div><div class="v">'+t.dist.toFixed(1)+'km</div>'
+    + '<div class="k">現金</div><div class="v">'+yen(t.cash)+'</div>'
+    + '<div class="k">カード</div><div class="v">'+yen(t.card)+'</div>'
+    + '<div class="k">QR決済</div><div class="v">'+yen(t.qr)+'</div>'
+    + '<div class="k">島割</div><div class="v">'+t.islCount+'件／'+yen(t.islSum)+'</div>'
+    + '<div class="k">半額</div><div class="v">'+t.halfCount+'件／'+yen(t.halfSum)+'</div>'
+    + '<div class="k">経費</div><div class="v">'+yen(t.exp)+'</div>'
+    + '<div class="k">差引</div><div class="v sum-big">'+yen(t.balance)+'</div></div>';
+  $("monthDays").innerHTML = dates.length ? '<table><tr><th>日付</th><th class="num">件数</th><th class="num">売上</th><th class="num">経費</th><th class="num">差引</th></tr>'
+    + dates.map(d => { const dt = totals(byDate[d].trips, byDate[d].expenses);
+      return '<tr><td><a href="#" data-jump="'+d+'">'+fmtDate(d)+'</a></td><td class="num">'+dt.count+'件</td><td class="num">'+yen(dt.sales)+'</td><td class="num">'+yen(dt.exp)+'</td><td class="num">'+yen(dt.balance)+'</td></tr>'; }).join("") + '</table>'
+    : '<div style="color:var(--sub)">この月の記録はありません</div>';
+  $("monthDays").querySelectorAll("[data-jump]").forEach(a => a.addEventListener("click", e => {
+    e.preventDefault(); currentDate = a.dataset.jump; $("dateInput").value = currentDate;
+    $("monthView").classList.add("hidden"); $("dayView").classList.remove("hidden"); loadDay();
+  }));
+}
+/* ---------- 印刷 ---------- */
+function tripTableHTML(trips){
+  if (!trips.length) return '<p>運行なし</p>';
+  return '<table><tr><th class="nw">No.</th><th class="nw">出発</th><th class="nw">終了</th><th>お客様名</th><th>迎え場所 → 送り先</th><th class="nw">距離</th><th class="nw">支払い</th><th class="nw">料金</th><th>備考</th></tr>'
+  + trips.map((x,i) => '<tr><td class="nw">'+(i+1)+'</td><td class="nw">'+(x.start_time ? x.start_time.slice(0,5) : "")+'</td><td class="nw">'+(x.end_time ? x.end_time.slice(0,5) : "")+'</td>'
+    + '<td>'+esc(x.customer_name)+(x.car_number ? ' '+esc(x.car_number) : "")+'</td>'
+    + '<td>'+esc(x.pickup)+' → '+esc(x.destination)+'</td>'
+    + '<td class="nw">'+(Number(x.distance_km)||0).toFixed(1)+'km</td><td class="nw">'+PAY_LABEL[x.payment]+'</td><td class="nw">'+yen(x.fare)+'</td><td>'+esc(x.memo)+'</td></tr>').join("") + '</table>';
+}
+function dayReportHTML(dstr, trips, expenses, memo, breakBefore){
+  const t = totals(trips, expenses);
+  return '<div'+(breakBefore ? ' class="daybreak"' : "")+'><h1>運転代行 日報　'+fmtDate(dstr)+'</h1>'
+  + '<p class="sumline">売上合計 '+yen(t.sales)+' ／ 件数 '+t.count+'件 ／ 走行距離 '+t.dist.toFixed(1)+'km</p>'
+  + '<p class="sumline">現金 '+yen(t.cash)+' ／ カード '+yen(t.card)+' ／ QR決済 '+yen(t.qr)+' ／ 島割 '+t.islCount+'件 '+yen(t.islSum)+'</p>'
+  + '<p class="sumline">経費 '+yen(t.exp)+' ／ 差引 '+yen(t.balance)+'</p>'
+  + '<h2>運行一覧</h2>' + tripTableHTML(trips)
+  + '<h2>経費</h2>' + (expenses.length ? '<table><tr><th>内容</th><th class="num">金額</th></tr>' + expenses.map(e => '<tr><td>'+esc(e.label)+'</td><td class="num">'+yen(e.amount)+'</td></tr>').join("") + '</table>' : '<p>なし</p>')
+  + (memo ? '<h2>メモ</h2><p>'+esc(memo)+'</p>' : "") + '</div>';
+}
+function doPrint(html){ $("printArea").innerHTML = html; window.print(); }
+function printDay(){
+  doPrint(dayReportHTML(currentDate, dayTrips, dayExpenses, $("dayMemo").value, false));
+}
+function monthHeadHTML(){
+  const t = monthData.totals;
+  return '<h1>運転代行 月次日報　'+monthData.y+'年'+monthData.m+'月</h1>'
+  + '<p class="sumline">売上合計 '+yen(t.sales)+' ／ 件数 '+t.count+'件 ／ 稼働 '+monthData.dates.length+'日 ／ 走行距離 '+t.dist.toFixed(1)+'km</p>'
+  + '<p class="sumline">現金 '+yen(t.cash)+' ／ カード '+yen(t.card)+' ／ QR決済 '+yen(t.qr)+' ／ 島割 '+t.islCount+'件 '+yen(t.islSum)+'</p>'
+  + '<p class="sumline">経費 '+yen(t.exp)+' ／ 差引 '+yen(t.balance)+'</p>'
+  + '<h2>日別</h2><table><tr><th>日付</th><th class="num">件数</th><th class="num">売上</th><th class="num">経費</th><th class="num">差引</th></tr>'
+  + monthData.dates.map(d => { const dt = totals(monthData.byDate[d].trips, monthData.byDate[d].expenses);
+    return '<tr><td>'+fmtDate(d)+'</td><td class="num">'+dt.count+'件</td><td class="num">'+yen(dt.sales)+'</td><td class="num">'+yen(dt.exp)+'</td><td class="num">'+yen(dt.balance)+'</td></tr>'; }).join("") + '</table>';
+}
+function printMonth(){ if (monthData) doPrint(monthHeadHTML()); }
+function printMonthFull(){
+  if (!monthData) return;
+  let h = '<h1>運転代行 月次日報（全日分）　'+monthData.y+'年'+monthData.m+'月</h1>' + monthHeadHTML().split("</h1>")[1];
+  for (const d of monthData.dates){
+    const g = monthData.byDate[d];
+    h += dayReportHTML(d, g.trips, g.expenses, g.memo, true);
+  }
+  doPrint(h);
+}
+/* ---------- 料金表 ---------- */
+function fareTableHTML(fn, maxBand, label){
+  let h = '<table><tr><th>区間</th><th class="num">料金</th></tr>';
+  for (let n=0;n<=maxBand;n++){
+    const range = fn === bandFareIsland && n === 0 ? "0〜1.9km" : n + "〜" + n + ".9km";
+    const probe = fn === bandFareIsland && n === 0 ? 0 : n;
+    h += '<tr><td>'+range+'</td><td class="num">'+yen(fn(probe))+'</td></tr>';
+  }
+  return h + '</table>';
+}
+/* ---------- 認証・初期化 ---------- */
+function showLogin(){ $("loginRoot").classList.remove("hidden"); $("appRoot").classList.add("hidden"); }
+function showApp(){
+  $("loginRoot").classList.add("hidden"); $("appRoot").classList.remove("hidden");
+  $("dateInput").value = currentDate;
+  $("monthInput").value = currentDate.slice(0,7);
+  buildSingleForm(); buildBatchForm(); loadDay();
+}
+$("loginBtn").addEventListener("click", async () => {
+  const msg = $("loginMsg");
+  const {error} = await sb.auth.signInWithPassword({email: $("loginEmail").value.trim(), password: $("loginPass").value});
+  if (error){ msg.textContent = "ログインできませんでした。メールアドレスとパスワードを確認してください。"; msg.className = "msg err"; return; }
+  showApp();
+});
+$("logoutBtn").addEventListener("click", async () => { await sb.auth.signOut(); showLogin(); });
+$("prevDay").addEventListener("click", () => { currentDate = addDays(currentDate, -1); $("dateInput").value = currentDate; loadDay(); });
+$("nextDay").addEventListener("click", () => { currentDate = addDays(currentDate, 1); $("dateInput").value = currentDate; loadDay(); });
+$("dateInput").addEventListener("change", () => { if ($("dateInput").value){ currentDate = $("dateInput").value; loadDay(); } });
+$("toMonthBtn").addEventListener("click", () => { $("dayView").classList.add("hidden"); $("monthView").classList.remove("hidden"); $("monthInput").value = currentDate.slice(0,7); loadMonth(); });
+$("backToDay").addEventListener("click", () => { $("monthView").classList.add("hidden"); $("dayView").classList.remove("hidden"); });
+$("monthInput").addEventListener("change", loadMonth);
+$("printDayBtn").addEventListener("click", printDay);
+$("printMonthBtn").addEventListener("click", printMonth);
+$("printMonthFullBtn").addEventListener("click", printMonthFull);
+$("formModeSeg").querySelectorAll("button").forEach(b => b.addEventListener("click", () => {
+  $("formModeSeg").querySelectorAll("button").forEach(x => x.classList.remove("on")); b.classList.add("on");
+  const batch = b.dataset.mode === "batch";
+  $("singleFormWrap").classList.toggle("hidden", batch);
+  $("batchFormWrap").classList.toggle("hidden", !batch);
+}));
+$("expAddBtn").addEventListener("click", async () => {
+  const label = $("expLabel").value.trim(); const amount = parseInt($("expAmount").value) || 0;
+  const msg = $("expMsg");
+  if (!label || !amount){ msg.textContent = "内容と金額を入力してください"; msg.className = "msg err"; return; }
+  const {error} = await sb.from("expenses").insert({date: currentDate, label, amount});
+  if (error){ msg.textContent = "保存に失敗しました: " + error.message; msg.className = "msg err"; return; }
+  $("expLabel").value = ""; $("expAmount").value = ""; msg.textContent = "追加しました"; msg.className = "msg ok"; loadDay();
+});
+$("memoSaveBtn").addEventListener("click", async () => {
+  const msg = $("memoMsg");
+  const {error} = await sb.from("day_notes").upsert({date: currentDate, memo: $("dayMemo").value}, {onConflict: "date"});
+  if (error){ msg.textContent = "保存に失敗しました: " + error.message; msg.className = "msg err"; return; }
+  msg.textContent = "保存しました"; msg.className = "msg ok";
+});
+$("fareTableGeneral").innerHTML = fareTableHTML(bandFareGeneral, 41);
+$("fareTableIsland").innerHTML = fareTableHTML(bandFareIsland, 50);
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+(async () => {
+  const {data} = await sb.auth.getSession();
+  if (data.session) showApp(); else showLogin();
+})();
+</script>
+</body>
+</html>
