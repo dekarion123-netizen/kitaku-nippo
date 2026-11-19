@@ -9,53 +9,55 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#0f2a4a">
+<meta name="theme-color" content="#33475e">
+<script>try{var _t=localStorage.getItem("nippo-theme");if(!_t)_t=(window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches)?"dark":"light";document.documentElement.dataset.theme=_t;}catch(e){document.documentElement.dataset.theme="light";}</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-:root{--navy:#0f2a4a;--navy2:#1b3f6e;--bg:#eef2f7;--card:#fff;--line:#d5dde8;--txt:#1c2733;--sub:#5b6b7d;--green:#1e7d46;--red:#b3372f;--amber:#9a6a12}
+:root{--navy:#3c5a7d;--navy2:#54708f;--bg:#f4f3ef;--card:#fdfdfb;--line:#d8d5cc;--txt:#2e3138;--sub:#6a7078;--green:#3d7a54;--red:#a04a44;--amber:#96702a;--head:#33475e;--chip:#e8ebee;--chiptxt:#3c5a7d;--input:#ffffff;--dangerbg:#f6e3e1;--islbg:#e3efe6;--halfbg:#f7ecd2}
+html[data-theme="dark"]{--navy:#8fb0d8;--navy2:#33567f;--bg:#17191d;--card:#212429;--line:#3b4048;--txt:#e3e1da;--sub:#9aa1ab;--green:#7fb894;--red:#e08d85;--amber:#dcb26a;--head:#1d2733;--chip:#2b3038;--chiptxt:#cfd6de;--input:#26292f;--dangerbg:#3d2725;--islbg:#24382b;--halfbg:#3d3421}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{margin:0;font-family:-apple-system,"Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif;background:var(--bg);color:var(--txt);font-size:15px}
-header{background:var(--navy);color:#fff;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:20}
+header{background:var(--head);color:#fff;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:20}
 header .ttl{font-weight:700;font-size:17px}
 header button{background:transparent;border:1px solid rgba(255,255,255,.5);color:#fff;border-radius:8px;padding:5px 10px;font-size:12px}
-main{max-width:760px;margin:0 auto;padding:12px 12px 40px}
+main{max-width:1180px;margin:0 auto;padding:12px 12px 40px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:12px}
 h2{font-size:15px;margin:2px 0 10px;color:var(--navy)}
 .row{display:flex;gap:8px}
 .row>*{flex:1;min-width:0}
 label{display:block;font-size:12px;color:var(--sub);margin:8px 0 4px}
-input,select,textarea{width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;font-size:16px;background:#fff;color:var(--txt)}
+input,select,textarea{width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;font-size:16px;background:var(--input);color:var(--txt)}
 textarea{resize:vertical}
 .btn{display:inline-block;border:none;border-radius:9px;padding:11px 14px;font-size:14px;font-weight:600;cursor:pointer;text-align:center}
 .btn-main{background:var(--navy);color:#fff;width:100%}
-.btn-sub{background:#e4ebf3;color:var(--navy)}
+.btn-sub{background:var(--chip);color:var(--chiptxt)}
 .btn-gps{background:var(--navy2);color:#fff;width:100%;padding:8px;font-size:13px;margin-top:6px}
-.btn-now{background:#e4ebf3;color:var(--navy);padding:8px;font-size:13px;margin-top:6px;width:100%}
-.btn-danger{background:#f6e3e1;color:var(--red)}
+.btn-now{background:var(--chip);color:var(--chiptxt);padding:8px;font-size:13px;margin-top:6px;width:100%}
+.btn-danger{background:var(--dangerbg);color:var(--red)}
 .btn-small{padding:7px 10px;font-size:13px}
 .seg{display:flex;border:1px solid var(--line);border-radius:9px;overflow:hidden}
-.seg button{flex:1;padding:10px 4px;background:#fff;border:none;font-size:14px;cursor:pointer;color:var(--sub)}
+.seg button{flex:1;padding:10px 4px;background:var(--input);border:none;font-size:14px;cursor:pointer;color:var(--sub)}
 .seg button.on{background:var(--navy);color:#fff;font-weight:700}
 .seg button.on.green{background:var(--green)}
 .sum-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px 14px;font-size:14px}
 .sum-grid .k{color:var(--sub)}
 .sum-grid .v{text-align:right;font-weight:600}
 .sum-big{font-size:20px;font-weight:800;color:var(--navy)}
-.trip{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:8px;background:#fff}
+.trip{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:8px;background:var(--card)}
 .trip .t1{font-weight:700}
 .trip .t2{color:var(--sub);font-size:13px;margin-top:2px}
 .trip .fare{font-weight:800;color:var(--navy);font-size:16px}
-.badge{display:inline-block;font-size:11px;padding:2px 7px;border-radius:99px;background:#e4ebf3;color:var(--navy);margin-left:6px;vertical-align:2px}
-.badge.island{background:#e2f2e7;color:var(--green)}
-.badge.half{background:#fdf0d5;color:var(--amber)}
+.badge{display:inline-block;font-size:11px;padding:2px 7px;border-radius:99px;background:var(--chip);color:var(--chiptxt);margin-left:6px;vertical-align:2px}
+.badge.island{background:var(--islbg);color:var(--green)}
+.badge.half{background:var(--halfbg);color:var(--amber)}
 .trip .acts{display:flex;gap:8px;margin-top:8px}
 .trip .acts button{flex:1}
 .navrow{display:flex;align-items:center;gap:8px;margin-bottom:12px}
-.navrow button{background:#fff;border:1px solid var(--line);border-radius:8px;padding:9px 12px;font-size:15px}
+.navrow button{background:var(--input);color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:9px 12px;font-size:15px}
 .navrow input{flex:1}
 table{border-collapse:collapse;width:100%;font-size:13px}
 th,td{border:1px solid var(--line);padding:6px 8px;text-align:left}
-th{background:#eef2f7}
+th{background:var(--chip)}
 td.num,th.num{text-align:right}
 details{margin-bottom:10px}
 summary{cursor:pointer;font-weight:600;color:var(--navy);padding:6px 0}
@@ -77,11 +79,29 @@ summary{cursor:pointer;font-weight:600;color:var(--navy);padding:6px 0}
   #printArea .daybreak{page-break-before:always}
   #printArea .sumline{margin:2px 0}
 }
+header .hbtns{display:flex;gap:8px;align-items:center}
+html[data-theme="dark"]{color-scheme:dark}
+html[data-theme="dark"] .btn-main{background:var(--navy2)}
+html[data-theme="dark"] .seg button.on{background:var(--navy2)}
+@media (min-width:1000px){
+  #dayView{display:grid;grid-template-columns:minmax(420px,5fr) 7fr;gap:0 14px;align-items:start}
+  #dayView .navrow{grid-column:1/-1}
+  #dayView .card-summary{grid-column:1;grid-row:2}
+  #dayView .card-form{grid-column:1;grid-row:3}
+  #dayView .card-trips{grid-column:2;grid-row:2/span 2}
+  #dayView .card-exp{grid-column:1;grid-row:4}
+  #dayView .card-memo{grid-column:2;grid-row:4}
+  #dayView .card-fare{grid-column:1/-1;grid-row:5}
+  #monthView{display:grid;grid-template-columns:minmax(380px,5fr) 7fr;gap:0 14px;align-items:start}
+  #monthView .navrow{grid-column:1/-1}
+  #monthView .card-msummary{grid-column:1;grid-row:2}
+  #monthView .card-mdays{grid-column:2;grid-row:2}
+}
 </style>
 </head>
 <body>
 <div id="loginRoot" class="hidden">
-  <header><div class="ttl">運転代行 日報</div></header>
+  <header><div class="ttl">運転代行 日報</div><button type="button" class="themeBtn">ダークに切替</button></header>
   <main>
     <div class="card">
       <h2>ログイン</h2>
@@ -99,7 +119,7 @@ summary{cursor:pointer;font-weight:600;color:var(--navy);padding:6px 0}
 <div id="appRoot" class="hidden">
   <header>
     <div class="ttl">運転代行 日報</div>
-    <button id="logoutBtn">ログアウト</button>
+    <div class="hbtns"><button type="button" class="themeBtn">ダークに切替</button><button id="logoutBtn">ログアウト</button></div>
   </header>
   <main>
     <!-- 日次ビュー -->
@@ -109,7 +129,7 @@ summary{cursor:pointer;font-weight:600;color:var(--navy);padding:6px 0}
         <input type="date" id="dateInput">
         <button id="nextDay">▶</button>
       </div>
-      <div class="card">
+      <div class="card card-summary">
         <h2>今日のまとめ</h2>
         <div id="daySummary"></div>
         <div style="height:10px"></div>
@@ -118,7 +138,7 @@ summary{cursor:pointer;font-weight:600;color:var(--navy);padding:6px 0}
           <button class="btn btn-sub" id="printDayBtn">印刷 / PDF</button>
         </div>
       </div>
-      <div class="card">
+      <div class="card card-form">
         <h2>運行を追加</h2>
         <div class="seg" id="formModeSeg">
           <button data-mode="single" class="on">1件入力</button>
@@ -128,11 +148,11 @@ summary{cursor:pointer;font-weight:600;color:var(--navy);padding:6px 0}
         <div id="batchFormWrap" class="hidden"></div>
         <div class="msg" id="formMsg"></div>
       </div>
-      <div class="card">
+      <div class="card card-trips">
         <h2>運行一覧</h2>
         <div id="tripList"></div>
       </div>
-      <div class="card">
+      <div class="card card-exp">
         <h2>経費</h2>
         <div id="expenseList"></div>
         <div class="row">
@@ -143,14 +163,14 @@ summary{cursor:pointer;font-weight:600;color:var(--navy);padding:6px 0}
         <button class="btn btn-sub" id="expAddBtn" style="width:100%">経費を追加</button>
         <div class="msg" id="expMsg"></div>
       </div>
-      <div class="card">
+      <div class="card card-memo">
         <h2>その日のメモ</h2>
         <textarea id="dayMemo" rows="3"></textarea>
         <div style="height:10px"></div>
         <button class="btn btn-sub" id="memoSaveBtn" style="width:100%">メモを保存</button>
         <div class="msg" id="memoMsg"></div>
       </div>
-      <div class="card">
+      <div class="card card-fare">
         <h2>料金表</h2>
         <details><summary>一般料金表（令和6年11月1日改正）</summary><div id="fareTableGeneral"></div></details>
         <details><summary>島割料金表（令和7年6月1日改正）</summary><div id="fareTableIsland"></div></details>
@@ -163,7 +183,7 @@ summary{cursor:pointer;font-weight:600;color:var(--navy);padding:6px 0}
         <button id="backToDay">← 日報に戻る</button>
         <input type="month" id="monthInput">
       </div>
-      <div class="card">
+      <div class="card card-msummary">
         <h2>月のまとめ</h2>
         <div id="monthSummary"></div>
         <div style="height:10px"></div>
@@ -171,7 +191,7 @@ summary{cursor:pointer;font-weight:600;color:var(--navy);padding:6px 0}
         <div style="height:8px"></div>
         <button class="btn btn-sub" id="printMonthFullBtn" style="width:100%">月分まとめてPDF（1日ごとページ分け）</button>
       </div>
-      <div class="card">
+      <div class="card card-mdays">
         <h2>日別</h2>
         <div id="monthDays"></div>
       </div>
@@ -228,6 +248,19 @@ function buildMemo(o){
   return (tags.join(" ") + (user ? " " + user : "")).trim();
 }
 const PAY_LABEL = {cash:"現金", card:"カード", qr:"QR決済"};
+
+/* ---------- テーマ切替（ライト／ダーク） ---------- */
+function applyTheme(t, save){
+  document.documentElement.dataset.theme = t;
+  if (save) { try{ localStorage.setItem("nippo-theme", t); }catch(e){} }
+  document.querySelectorAll(".themeBtn").forEach(b => b.textContent = (t === "dark" ? "ライトに切替" : "ダークに切替"));
+  const mc = document.querySelector('meta[name="theme-color"]');
+  if (mc) mc.setAttribute("content", t === "dark" ? "#1d2733" : "#33475e");
+}
+document.querySelectorAll(".themeBtn").forEach(b => b.addEventListener("click", () => {
+  applyTheme(document.documentElement.dataset.theme === "dark" ? "light" : "dark", true);
+}));
+applyTheme(document.documentElement.dataset.theme || "light", false);
 </script>
 <script>
 /* ---------- 運行フォーム ---------- */
