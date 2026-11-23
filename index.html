@@ -79,6 +79,15 @@ summary{cursor:pointer;font-weight:600;color:var(--navy);padding:6px 0}
   #printArea .daybreak{page-break-before:always}
   #printArea .sumline{margin:2px 0}
 }
+.stopwatch{display:flex;align-items:center;gap:14px;flex-wrap:wrap;border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:12px;background:var(--input)}
+.sw-label{font-size:12px;color:var(--sub)}
+.sw-time{font-size:34px;font-weight:800;color:var(--navy);font-variant-numeric:tabular-nums;line-height:1.15}
+.sw-min{font-size:12px;color:var(--sub)}
+.sw-btns{display:flex;gap:8px;margin-left:auto}
+.sw-btns button{border:none;border-radius:8px;padding:12px 18px;font-size:15px;font-weight:700;cursor:pointer}
+.sw-toggle{background:var(--navy);color:#fff}
+.sw-toggle.run{background:var(--red)}
+.sw-reset{background:var(--chip);color:var(--chiptxt)}
 header .hbtns{display:flex;gap:8px;align-items:center}
 html[data-theme="dark"]{color-scheme:dark}
 html[data-theme="dark"] .btn-main{background:var(--navy2)}
@@ -140,6 +149,17 @@ html[data-theme="dark"] .seg button.on{background:var(--navy2)}
       </div>
       <div class="card card-form">
         <h2>運行を追加</h2>
+        <div class="stopwatch">
+          <div>
+            <div class="sw-label">立ち寄りタイマー</div>
+            <div class="sw-time" id="swTime">00:00</div>
+            <div class="sw-min" id="swMin">時間の確認用です（料金計算には連動しません）</div>
+          </div>
+          <div class="sw-btns">
+            <button type="button" class="sw-toggle" id="swToggle">スタート</button>
+            <button type="button" class="sw-reset" id="swReset">リセット</button>
+          </div>
+        </div>
         <div class="seg" id="formModeSeg">
           <button data-mode="single" class="on">1件入力</button>
           <button data-mode="batch">まとめ入力（最大20件）</button>
@@ -645,6 +665,32 @@ $("memoSaveBtn").addEventListener("click", async () => {
 });
 $("fareTableGeneral").innerHTML = fareTableHTML(bandFareGeneral, 41);
 $("fareTableIsland").innerHTML = fareTableHTML(bandFareIsland, 50);
+/* ---------- 立ち寄りタイマー（時間の確認用・料金計算には連動しない） ---------- */
+const SW_KEY = "nippo-stopwatch";
+let swState = {startTs: 0, elapsed: 0, running: false};
+try { const sv = JSON.parse(localStorage.getItem(SW_KEY) || "null"); if (sv && typeof sv.elapsed === "number") swState = sv; } catch(e) {}
+function swNow(){ return swState.elapsed + (swState.running ? Date.now() - swState.startTs : 0); }
+function swSave(){ try { localStorage.setItem(SW_KEY, JSON.stringify(swState)); } catch(e) {} }
+function swRender(){
+  const sec = Math.floor(swNow() / 1000);
+  const h = Math.floor(sec / 3600), m = Math.floor(sec % 3600 / 60), ss = sec % 60;
+  $("swTime").textContent = (h > 0 ? h + ":" + String(m).padStart(2, "0") : String(m).padStart(2, "0")) + ":" + String(ss).padStart(2, "0");
+  const sub = $("swMin");
+  if (swState.running) sub.textContent = "いま " + (Math.floor(sec / 60) + 1) + " 分目です";
+  else if (sec > 0) sub.textContent = Math.floor(sec / 60) + "分" + (sec % 60) + "秒 で止まっています";
+  else sub.textContent = "時間の確認用です（料金計算には連動しません）";
+  const tg = $("swToggle");
+  tg.textContent = swState.running ? "ストップ" : (sec > 0 ? "再開" : "スタート");
+  tg.classList.toggle("run", swState.running);
+}
+$("swToggle").addEventListener("click", () => {
+  if (swState.running){ swState.elapsed = swNow(); swState.running = false; }
+  else { swState.startTs = Date.now(); swState.running = true; }
+  swSave(); swRender();
+});
+$("swReset").addEventListener("click", () => { swState = {startTs: 0, elapsed: 0, running: false}; swSave(); swRender(); });
+setInterval(swRender, 500);
+swRender();
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
 (async () => {
   const {data} = await sb.auth.getSession();
