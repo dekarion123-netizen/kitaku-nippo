@@ -506,6 +506,23 @@ function summaryHTML(t){
   + '<div class="k">経費</div><div class="v">'+yen(t.exp)+'</div>'
   + '<div class="k">差引</div><div class="v sum-big">'+yen(t.balance)+'</div></div>';
 }
+/* 営業日は20時始まり: 並び順は「20:00を起点に深夜を後ろへ回す」営業時間順にする */
+function bizKey(t){
+  if (!t) return null;
+  const parts = String(t).slice(0,5).split(":");
+  const mins = Number(parts[0]) * 60 + Number(parts[1]) - 20 * 60;
+  return mins < 0 ? mins + 1440 : mins;
+}
+function tripSortKey(x){
+  const k = bizKey(x.start_time);
+  if (k !== null) return k;
+  const e = bizKey(x.end_time);
+  if (e !== null) return e;
+  return 99999;
+}
+function byBizOrder(a, b){
+  return tripSortKey(a) - tripSortKey(b) || String(a.created_at || "").localeCompare(String(b.created_at || ""));
+}
 async function loadDay(){
   const [tr, ex, nt] = await Promise.all([
     sb.from("trips").select("*").eq("date", currentDate).order("start_time", {ascending:true, nullsFirst:false}).order("created_at", {ascending:true}),
@@ -513,6 +530,7 @@ async function loadDay(){
     sb.from("day_notes").select("*").eq("date", currentDate).maybeSingle()
   ]);
   dayTrips = tr.data || []; dayExpenses = ex.data || [];
+  dayTrips.sort(byBizOrder);
   $("daySummary").innerHTML = summaryHTML(totals(dayTrips, dayExpenses));
   renderTrips(); renderExpenses();
   $("dayMemo").value = nt.data ? nt.data.memo : "";
@@ -634,6 +652,7 @@ async function loadMonth(){
     sb.from("day_notes").select("*").gte("date", first).lt("date", nextStr)
   ]);
   const trips = tr.data || [], expenses = ex.data || [], notes = nt.data || [];
+  trips.sort((a, b) => String(a.date).localeCompare(String(b.date)) || byBizOrder(a, b));
   const byDate = {};
   for (const x of trips){ (byDate[x.date] = byDate[x.date] || {trips:[], expenses:[], memo:""}).trips.push(x); }
   for (const e of expenses){ (byDate[e.date] = byDate[e.date] || {trips:[], expenses:[], memo:""}).expenses.push(e); }
