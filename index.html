@@ -374,10 +374,34 @@ function wireForm(root){
   if (rf) rf.addEventListener("click", e => { e.preventDefault(); delete root.dataset.fareOverride; refreshForm(root); });
   root.querySelectorAll("[data-now]").forEach(b => b.addEventListener("click", () => {
     root.querySelector('[data-f="'+b.dataset.now+'"]').value = nowTime();
+    sndTap();
   }));
   root.querySelectorAll("[data-gps]").forEach(b => b.addEventListener("click", () => gpsFill(root, b)));
   refreshForm(root);
 }
+/* ---------- 操作音（押せたか分かるように） ---------- */
+let AC = null;
+function primeAudio(){
+  try {
+    if (!AC) AC = new (window.AudioContext || window.webkitAudioContext)();
+    if (AC.state === "suspended") AC.resume();
+  } catch(e){}
+}
+function tone(freq, at, dur){
+  if (!AC) return;
+  try {
+    const t0 = AC.currentTime + at;
+    const o = AC.createOscillator(), g = AC.createGain();
+    o.type = "sine"; o.frequency.value = freq;
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(0.22, t0 + 0.012);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    o.connect(g); g.connect(AC.destination);
+    o.start(t0); o.stop(t0 + dur + 0.05);
+  } catch(e){}
+}
+function sndTap(){ primeAudio(); tone(880, 0, 0.08); }
+function sndSave(){ primeAudio(); tone(740, 0, 0.09); tone(1175, 0.1, 0.14); }
 function inRing(lon, lat, ring){
   let inside = false;
   for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
@@ -438,6 +462,7 @@ function gpsFill(root, btn){
     const place = await resolvePlaceName(lat, lon);
     if (place) {
       input.value = place;
+      sndTap();
       btn.textContent = old; btn.disabled = false;
     } else {
       btn.textContent = "地名が取れませんでした";
@@ -516,10 +541,15 @@ function startEdit(id){
   card.innerHTML = tripFormHTML(x) + '<div class="acts"><button class="btn btn-main btn-small" data-saveedit>更新する</button><button class="btn btn-sub btn-small" data-canceledit>キャンセル</button></div><div class="msg"></div>';
   const form = card.querySelector(".tripform");
   wireForm(form);
-  card.querySelector("[data-saveedit]").addEventListener("click", async () => {
+  card.querySelector("[data-saveedit]").addEventListener("click", async (ev) => {
+    const ebtn = ev.currentTarget;
+    if (ebtn.disabled) return;
+    ebtn.disabled = true;
+    primeAudio();
     const o = gatherForm(form); o.date = currentDate;
     const {error} = await sb.from("trips").update(o).eq("id", id);
-    if (error){ card.querySelector(".msg").textContent = "保存に失敗しました: " + error.message; card.querySelector(".msg").className = "msg err"; return; }
+    if (error){ card.querySelector(".msg").textContent = "保存に失敗しました: " + error.message; card.querySelector(".msg").className = "msg err"; ebtn.disabled = false; return; }
+    sndSave();
     loadDay();
   });
   card.querySelector("[data-canceledit]").addEventListener("click", renderTrips);
@@ -554,25 +584,35 @@ function buildBatchForm(){
 }
 function isEmptyTrip(o){ return !o.customer_name && !o.pickup && !o.destination && !(o.distance_km>0); }
 async function saveSingle(){
+  const btn = $("singleSave");
+  if (btn && btn.disabled) return;
+  if (btn) btn.disabled = true;
+  primeAudio();
   const form = $("singleFormWrap").querySelector(".tripform");
   const o = gatherForm(form); o.date = currentDate;
   const msg = $("formMsg");
-  if (isEmptyTrip(o)){ msg.textContent = "何か入力してから保存してください"; msg.className = "msg err"; return; }
+  if (isEmptyTrip(o)){ msg.textContent = "何か入力してから保存してください"; msg.className = "msg err"; if (btn) btn.disabled = false; return; }
   const {error} = await sb.from("trips").insert(o);
-  if (error){ msg.textContent = "保存に失敗しました: " + error.message; msg.className = "msg err"; return; }
+  if (error){ msg.textContent = "保存に失敗しました: " + error.message; msg.className = "msg err"; if (btn) btn.disabled = false; return; }
+  sndSave();
   msg.textContent = "保存しました"; msg.className = "msg ok";
   buildSingleForm(); loadDay();
 }
 async function saveBatch(){
+  const bbtn = $("batchSave");
+  if (bbtn && bbtn.disabled) return;
+  if (bbtn) bbtn.disabled = true;
+  primeAudio();
   const rows = [];
   $("batchFormWrap").querySelectorAll(".tripform").forEach(f => {
     const o = gatherForm(f); o.date = currentDate;
     if (!isEmptyTrip(o)) rows.push(o);
   });
   const msg = $("formMsg");
-  if (!rows.length){ msg.textContent = "入力された行がありません"; msg.className = "msg err"; return; }
+  if (!rows.length){ msg.textContent = "入力された行がありません"; msg.className = "msg err"; if (bbtn) bbtn.disabled = false; return; }
   const {error} = await sb.from("trips").insert(rows);
-  if (error){ msg.textContent = "保存に失敗しました: " + error.message; msg.className = "msg err"; return; }
+  if (error){ msg.textContent = "保存に失敗しました: " + error.message; msg.className = "msg err"; if (bbtn) bbtn.disabled = false; return; }
+  sndSave();
   msg.textContent = rows.length + "件を保存しました"; msg.className = "msg ok";
   buildBatchForm(); loadDay();
 }
@@ -705,17 +745,21 @@ $("formModeSeg").querySelectorAll("button").forEach(b => b.addEventListener("cli
   $("batchFormWrap").classList.toggle("hidden", !batch);
 }));
 $("expAddBtn").addEventListener("click", async () => {
+  primeAudio();
   const label = $("expLabel").value.trim(); const amount = parseInt($("expAmount").value) || 0;
   const msg = $("expMsg");
   if (!label || !amount){ msg.textContent = "内容と金額を入力してください"; msg.className = "msg err"; return; }
   const {error} = await sb.from("expenses").insert({date: currentDate, label, amount});
   if (error){ msg.textContent = "保存に失敗しました: " + error.message; msg.className = "msg err"; return; }
+  sndSave();
   $("expLabel").value = ""; $("expAmount").value = ""; msg.textContent = "追加しました"; msg.className = "msg ok"; loadDay();
 });
 $("memoSaveBtn").addEventListener("click", async () => {
+  primeAudio();
   const msg = $("memoMsg");
   const {error} = await sb.from("day_notes").upsert({date: currentDate, memo: $("dayMemo").value}, {onConflict: "date"});
   if (error){ msg.textContent = "保存に失敗しました: " + error.message; msg.className = "msg err"; return; }
+  sndSave();
   msg.textContent = "保存しました"; msg.className = "msg ok";
 });
 $("fareTableGeneral").innerHTML = fareTableHTML(bandFareGeneral, 41);
