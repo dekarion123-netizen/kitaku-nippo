@@ -51,6 +51,7 @@ textarea{resize:vertical}
 .badge{display:inline-block;font-size:12px;padding:2px 7px;border-radius:99px;background:var(--chip);color:var(--chiptxt);margin-left:6px;vertical-align:2px}
 .badge.island{background:var(--islbg);color:var(--green)}
 .badge.half{background:var(--halfbg);color:var(--amber)}
+.carnum{display:inline-block;border:1.5px solid var(--sub);border-radius:5px;padding:0 8px;background:var(--input);color:var(--txt);font-weight:700;letter-spacing:.04em}
 .trip .acts{display:flex;gap:8px;margin-top:8px}
 .trip .acts button{flex:1}
 .navrow{display:flex;align-items:center;gap:8px;margin-bottom:12px}
@@ -541,7 +542,7 @@ function tripCardHTML(x){
     + (x.pickup_fee ? '<span class="badge">迎車'+x.pickup_fee+'円</span>' : "");
   const route = (x.pickup || "―") + " → " + (x.destination || "―");
   const times = (x.start_time ? x.start_time.slice(0,5) : "―") + "〜" + (x.end_time ? x.end_time.slice(0,5) : "―");
-  return '<div class="t1">'+esc(x.customer_name || "（名前なし）")+(x.car_number ? ' <span style="color:var(--sub);font-weight:400">'+esc(x.car_number)+'</span>' : "")+badges+'</div>'
+  return '<div class="t1">'+esc(x.customer_name || "（名前なし）")+badges+'</div>' + (x.car_number ? '<div class="t2">車番 <span class="carnum">'+esc(x.car_number)+'</span></div>' : "")
   + '<div class="t2">'+esc(route)+'</div>'
   + '<div class="t2">'+times+'／'+(Number(x.distance_km)||0).toFixed(1)+'km／'+PAY_LABEL[x.payment]+(x.memo ? '／'+esc(x.memo) : "")+'</div>'
   + '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px"><span class="fare">'+yen(x.fare)+'</span></div>'
@@ -684,9 +685,9 @@ async function loadMonth(){
 /* ---------- 印刷 ---------- */
 function tripTableHTML(trips){
   if (!trips.length) return '<p>運行なし</p>';
-  return '<table><tr><th class="nw">No.</th><th class="nw">出発</th><th class="nw">終了</th><th>お客様名</th><th>迎え場所 → 送り先</th><th class="nw">距離</th><th class="nw">支払い</th><th class="nw">料金</th><th>備考</th></tr>'
+  return '<table><tr><th class="nw">No.</th><th class="nw">出発</th><th class="nw">終了</th><th>お客様名</th><th class="nw">車番</th><th>迎え場所 → 送り先</th><th class="nw">距離</th><th class="nw">支払い</th><th class="nw">料金</th><th>備考</th></tr>'
   + trips.map((x,i) => '<tr><td class="nw">'+(i+1)+'</td><td class="nw">'+(x.start_time ? x.start_time.slice(0,5) : "")+'</td><td class="nw">'+(x.end_time ? x.end_time.slice(0,5) : "")+'</td>'
-    + '<td>'+esc(x.customer_name)+(x.car_number ? ' '+esc(x.car_number) : "")+'</td>'
+    + '<td>'+esc(x.customer_name)+'</td><td class="nw">'+esc(x.car_number || "")+'</td>'
     + '<td>'+esc(x.pickup)+' → '+esc(x.destination)+'</td>'
     + '<td class="nw">'+(Number(x.distance_km)||0).toFixed(1)+'km</td><td class="nw">'+PAY_LABEL[x.payment]+'</td><td class="nw">'+yen(x.fare)+'</td><td>'+esc(x.memo)+'</td></tr>').join("") + '</table>';
 }
