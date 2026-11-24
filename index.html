@@ -374,7 +374,6 @@ function wireForm(root){
   if (rf) rf.addEventListener("click", e => { e.preventDefault(); delete root.dataset.fareOverride; refreshForm(root); });
   root.querySelectorAll("[data-now]").forEach(b => b.addEventListener("click", () => {
     root.querySelector('[data-f="'+b.dataset.now+'"]').value = nowTime();
-    sndTap();
   }));
   root.querySelectorAll("[data-gps]").forEach(b => b.addEventListener("click", () => gpsFill(root, b)));
   refreshForm(root);
@@ -402,6 +401,9 @@ function tone(freq, at, dur){
 }
 function sndTap(){ primeAudio(); tone(880, 0, 0.08); }
 function sndSave(){ primeAudio(); tone(740, 0, 0.09); tone(1175, 0.1, 0.14); }
+document.addEventListener("click", e => {
+  if (e.target.closest && e.target.closest("button, summary")) sndTap();
+}, true);
 function inRing(lon, lat, ring){
   let inside = false;
   for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
@@ -462,7 +464,6 @@ function gpsFill(root, btn){
     const place = await resolvePlaceName(lat, lon);
     if (place) {
       input.value = place;
-      sndTap();
       btn.textContent = old; btn.disabled = false;
     } else {
       btn.textContent = "地名が取れませんでした";
