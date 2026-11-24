@@ -12,6 +12,7 @@
 <meta name="theme-color" content="#3d4f61">
 <script>try{var _t=localStorage.getItem("nippo-theme");if(!_t)_t=(window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches)?"dark":"light";document.documentElement.dataset.theme=_t;}catch(e){document.documentElement.dataset.theme="light";}</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="./aza.js"></script>
 <style>
 :root{--navy:#4a6076;--navy2:#63798d;--bg:#f2efe8;--card:#faf7f0;--line:#d9d4c7;--txt:#33322e;--sub:#75705f;--green:#4a7a5c;--red:#a35650;--amber:#97783a;--head:#3d4f61;--chip:#eae7dd;--chiptxt:#4a6076;--input:#fffdf8;--dangerbg:#f4e4e0;--islbg:#e4eee3;--halfbg:#f6ecd4}
 html[data-theme="dark"]{--navy:#93a9c4;--navy2:#3a506b;--bg:#1d1f22;--card:#25272b;--line:#3a3d42;--txt:#ddd9cf;--sub:#a09c92;--green:#84ad92;--red:#d1918a;--amber:#d3af72;--head:#23282e;--chip:#2e3134;--chiptxt:#c9c4b8;--input:#2a2c30;--dangerbg:#3b2a28;--islbg:#28382c;--halfbg:#3b3424}
@@ -377,7 +378,27 @@ function wireForm(root){
   root.querySelectorAll("[data-gps]").forEach(b => b.addEventListener("click", () => gpsFill(root, b)));
   refreshForm(root);
 }
+function inRing(lon, lat, ring){
+  let inside = false;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const xi = ring[i][0], yi = ring[i][1], xj = ring[j][0], yj = ring[j][1];
+    if (((yi > lat) !== (yj > lat)) && (lon < (xj - xi) * (lat - yi) / (yj - yi) + xi)) inside = !inside;
+  }
+  return inside;
+}
+function azaLookup(lat, lon){
+  if (!window.AZA_DATA) return "";
+  for (const pair of window.AZA_DATA) {
+    const name = pair[0], polys = pair[1];
+    for (const poly of polys) {
+      if (inRing(lon, lat, poly[0]) && !poly.slice(1).some(h => inRing(lon, lat, h))) return name;
+    }
+  }
+  return "";
+}
 async function resolvePlaceName(lat, lon){
+  const az = azaLookup(lat, lon);
+  if (az) return az;
   try {
     const r = await fetch("https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat="+lat+"&lon="+lon+"&zoom=18&addressdetails=1", {headers:{"Accept-Language":"ja"}});
     const j = await r.json();
