@@ -382,9 +382,14 @@ function gpsFill(root, btn){
   const input = root.querySelector('[data-f="'+field+'"]');
   const old = btn.textContent;
   btn.textContent = "取得中…"; btn.disabled = true;
-  navigator.geolocation.getCurrentPosition(async pos => {
+  let best = null, wid = null, done = false;
+  const started = Date.now();
+  const finish = async () => {
+    if (done) return; done = true;
+    if (wid !== null) navigator.geolocation.clearWatch(wid);
+    if (!best){ alert("位置情報が取得できませんでした"); btn.textContent = old; btn.disabled = false; return; }
     try {
-      const {latitude:lat, longitude:lon} = pos.coords;
+      const {latitude:lat, longitude:lon} = best.coords;
       const r = await fetch("https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat="+lat+"&lon="+lon+"&zoom=18&addressdetails=1", {headers:{"Accept-Language":"ja"}});
       const j = await r.json();
       const a = j.address || {};
@@ -392,8 +397,14 @@ function gpsFill(root, btn){
       input.value = parts.length ? parts.join("") : (j.display_name || "");
       if (!input.value) input.value = lat.toFixed(5)+", "+lon.toFixed(5);
     } catch(e){ alert("住所の取得に失敗しました"); }
-    btn.textContent = old; btn.disabled = false;
-  }, () => { alert("位置情報が取得できませんでした"); btn.textContent = old; btn.disabled = false; }, {enableHighAccuracy:true, timeout:15000});
+    btn.textContent = "±" + Math.round(best.coords.accuracy) + "m";
+    setTimeout(() => { btn.textContent = old; btn.disabled = false; }, 4000);
+  };
+  wid = navigator.geolocation.watchPosition(pos => {
+    if (!best || pos.coords.accuracy < best.coords.accuracy) best = pos;
+    if (best.coords.accuracy <= 30 || Date.now() - started > 12000) finish();
+  }, err => { if (err.code === 1) finish(); }, {enableHighAccuracy:true, timeout:15000, maximumAge:0});
+  setTimeout(finish, 13000);
 }
 </script>
 <script>
