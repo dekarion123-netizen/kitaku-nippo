@@ -377,6 +377,31 @@ function wireForm(root){
   root.querySelectorAll("[data-gps]").forEach(b => b.addEventListener("click", () => gpsFill(root, b)));
   refreshForm(root);
 }
+async function resolvePlaceName(lat, lon){
+  try {
+    const r = await fetch("https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat="+lat+"&lon="+lon+"&zoom=18&addressdetails=1", {headers:{"Accept-Language":"ja"}});
+    const j = await r.json();
+    const a = j.address || {};
+    const p = a.quarter || (a.neighbourhood || "").replace(/[一二三四五六七八九十0-9]+丁目$/, "") || a.suburb || "";
+    if (p) return p;
+  } catch(e){}
+  try {
+    const ctl = new AbortController();
+    const t = setTimeout(() => ctl.abort(), 5000);
+    const r = await fetch("https://mreversegeocode.gsi.go.jp/reverse-geocoder/LonLatToAddress?lat="+lat+"&lon="+lon, {signal: ctl.signal});
+    clearTimeout(t);
+    const j = await r.json();
+    const lv = j && j.results && j.results.lv01Nm;
+    if (lv) return String(lv).replace(/^大字/, "");
+  } catch(e){}
+  try {
+    const r = await fetch("https://geoapi.heartrails.com/api/json?method=searchByGeoLocation&x="+lon+"&y="+lat);
+    const j = await r.json();
+    const loc = j && j.response && j.response.location && j.response.location[0];
+    if (loc && loc.town) return loc.town;
+  } catch(e){}
+  return "";
+}
 function gpsFill(root, btn){
   const field = btn.dataset.gps;
   const input = root.querySelector('[data-f="'+field+'"]');
@@ -388,16 +413,15 @@ function gpsFill(root, btn){
     if (done) return; done = true;
     if (wid !== null) navigator.geolocation.clearWatch(wid);
     if (!best){ alert("位置情報が取得できませんでした"); btn.textContent = old; btn.disabled = false; return; }
-    try {
-      const {latitude:lat, longitude:lon} = best.coords;
-      const r = await fetch("https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat="+lat+"&lon="+lon+"&zoom=18&addressdetails=1", {headers:{"Accept-Language":"ja"}});
-      const j = await r.json();
-      const a = j.address || {};
-      const place = a.quarter || (a.neighbourhood || "").replace(/[一二三四五六七八九十0-9]+丁目$/, "") || a.suburb || "";
-      input.value = place || (lat.toFixed(5)+", "+lon.toFixed(5));
-    } catch(e){ alert("住所の取得に失敗しました"); }
-    btn.textContent = "±" + Math.round(best.coords.accuracy) + "m";
-    setTimeout(() => { btn.textContent = old; btn.disabled = false; }, 4000);
+    const {latitude:lat, longitude:lon} = best.coords;
+    const place = await resolvePlaceName(lat, lon);
+    if (place) {
+      input.value = place;
+      btn.textContent = old; btn.disabled = false;
+    } else {
+      btn.textContent = "地名が取れませんでした";
+      setTimeout(() => { btn.textContent = old; btn.disabled = false; }, 3000);
+    }
   };
   wid = navigator.geolocation.watchPosition(pos => {
     if (!best || pos.coords.accuracy < best.coords.accuracy) best = pos;
