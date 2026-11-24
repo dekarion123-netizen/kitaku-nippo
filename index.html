@@ -393,9 +393,8 @@ function gpsFill(root, btn){
       const r = await fetch("https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat="+lat+"&lon="+lon+"&zoom=18&addressdetails=1", {headers:{"Accept-Language":"ja"}});
       const j = await r.json();
       const a = j.address || {};
-      const parts = [a.state, a.city || a.town || a.village, a.suburb || a.quarter || a.neighbourhood, (a.road||"") + (a.house_number||"")].filter(Boolean);
-      input.value = parts.length ? parts.join("") : (j.display_name || "");
-      if (!input.value) input.value = lat.toFixed(5)+", "+lon.toFixed(5);
+      const place = a.quarter || (a.neighbourhood || "").replace(/[一二三四五六七八九十0-9]+丁目$/, "") || a.suburb || "";
+      input.value = place || (lat.toFixed(5)+", "+lon.toFixed(5));
     } catch(e){ alert("住所の取得に失敗しました"); }
     btn.textContent = "±" + Math.round(best.coords.accuracy) + "m";
     setTimeout(() => { btn.textContent = old; btn.disabled = false; }, 4000);
