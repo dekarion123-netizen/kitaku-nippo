@@ -712,24 +712,23 @@ async function loadMonth(){
   }));
 }
 /* ---------- 印刷 ---------- */
-function tripTableHTML(trips, padRows){
+function tripTableHTML(trips){
   let h = '<table class="report"><colgroup><col style="width:4%"><col style="width:14%"><col style="width:8%"><col style="width:15%"><col style="width:8%"><col style="width:8%"><col style="width:15%"><col style="width:9%"><col style="width:6%"><col style="width:13%"></colgroup>'
   + '<tr><th rowspan="2">No.</th><th rowspan="2">お客様名</th><th rowspan="2">代行車<br>(No.)</th><th colspan="2">開始</th><th colspan="2">終了</th><th rowspan="2">金額</th><th rowspan="2">距離<br>(km)</th><th rowspan="2">備考</th></tr>'
   + '<tr><th>迎え場所</th><th>開始時間</th><th>終了時間</th><th>送り先</th></tr>'
   + trips.map((x,i) => '<tr><td class="c">'+(i+1)+'</td><td>'+esc(x.customer_name)+'</td><td class="c">'+esc(x.car_number || "")+'</td>'
     + '<td>'+esc(x.pickup)+'</td><td class="c">'+(x.start_time ? x.start_time.slice(0,5) : "")+'</td><td class="c">'+(x.end_time ? x.end_time.slice(0,5) : "")+'</td><td>'+esc(x.destination)+'</td>'
     + '<td class="r">'+yen(x.fare)+'</td><td class="r">'+(Number(x.distance_km)||0).toFixed(1)+'</td><td>'+esc(x.memo)+'</td></tr>').join("");
-  if (padRows) for (let i = trips.length; i < 25; i++) h += '<tr><td class="c">'+(i+1)+'</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>';
   return h + '</table>';
 }
-function dayReportHTML(dstr, trips, expenses, memo, cancels, breakBefore, padRows){
+function dayReportHTML(dstr, trips, expenses, memo, cancels, breakBefore){
   const t = totals(trips, expenses);
   const d = new Date(dstr+"T00:00:00");
   const dateLine = d.getFullYear()+"年"+(d.getMonth()+1)+"月"+d.getDate()+"日（"+WD[d.getDay()]+"）";
   return '<div'+(breakBefore ? ' class="daybreak"' : "")+'>'
   + '<table class="rheadtab"><tr><td class="rh-left"><span class="rtitle">乗務日報</span><span class="rdate">'+dateLine+'　天候（　　）</span></td>'
   + '<td class="rh-right"><table class="rcancel"><tr><th>キャンセル数</th></tr><tr><td>'+(cancels||0)+'件</td></tr></table></td></tr></table>'
-  + tripTableHTML(trips, padRows)
+  + tripTableHTML(trips)
   + '<table class="rtotal"><tr><th>売上金</th><td class="r">'+yen(t.sales)+'</td><th>現金</th><td class="r">'+yen(t.cash)+'</td><th>カード</th><td class="r">'+yen(t.card)+'</td><th>QR決済</th><td class="r">'+yen(t.qr)+'</td><th>経費</th><td class="r">'+yen(t.exp)+'</td><th>差引</th><td class="r">'+yen(t.balance)+'</td></tr></table>'
   + '<p class="sumline">件数 '+t.count+'件 ／ 走行距離 '+t.dist.toFixed(1)+'km ／ 島割 '+t.islCount+'件 '+yen(t.islSum)+(t.halfCount ? ' ／ 半額 '+t.halfCount+'件 '+yen(t.halfSum) : '')+'</p>'
   + (expenses.length ? '<h2>経費</h2><table><tr><th>内容</th><th class="num">金額</th></tr>' + expenses.map(e => '<tr><td>'+esc(e.label)+'</td><td class="num">'+yen(e.amount)+'</td></tr>').join("") + '</table>' : "")
@@ -737,7 +736,7 @@ function dayReportHTML(dstr, trips, expenses, memo, cancels, breakBefore, padRow
 }
 function doPrint(html){ $("printArea").innerHTML = html; window.print(); }
 function printDay(){
-  doPrint(dayReportHTML(currentDate, dayTrips, dayExpenses, $("dayMemo").value, dayCancels, false, true));
+  doPrint(dayReportHTML(currentDate, dayTrips, dayExpenses, $("dayMemo").value, dayCancels, false));
 }
 function monthHeadHTML(){
   const t = monthData.totals;
@@ -755,7 +754,7 @@ function printMonthFull(){
   let h = '<h1>運転代行 月次日報（全日分）　'+monthData.y+'年'+monthData.m+'月</h1>' + monthHeadHTML().split("</h1>")[1];
   for (const d of monthData.dates){
     const g = monthData.byDate[d];
-    h += dayReportHTML(d, g.trips, g.expenses, g.memo, g.cancels || 0, true, false);
+    h += dayReportHTML(d, g.trips, g.expenses, g.memo, g.cancels || 0, true);
   }
   doPrint(h);
 }
