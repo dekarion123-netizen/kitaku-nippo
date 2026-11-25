@@ -12,6 +12,7 @@
 <meta name="theme-color" content="#3d4f61">
 <script>try{var _t=localStorage.getItem("nippo-theme");if(!_t)_t=(window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches)?"dark":"light";document.documentElement.dataset.theme=_t;}catch(e){document.documentElement.dataset.theme="light";}</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="./aza.js"></script>
 <style>
 :root{--navy:#4a6076;--navy2:#63798d;--bg:#f2efe8;--card:#faf7f0;--line:#d9d4c7;--txt:#33322e;--sub:#75705f;--green:#4a7a5c;--red:#a35650;--amber:#97783a;--head:#3d4f61;--chip:#eae7dd;--chiptxt:#4a6076;--input:#fffdf8;--dangerbg:#f4e4e0;--islbg:#e4eee3;--halfbg:#f6ecd4}
@@ -166,6 +167,8 @@ html[data-theme="dark"] .seg button.on{background:var(--navy2)}
           <button class="btn btn-sub" id="toMonthBtn">月ごとの集計を見る</button>
           <button class="btn btn-sub" id="printDayBtn">印刷 / PDF</button>
         </div>
+        <div style="height:10px"></div>
+        <button class="btn btn-sub" id="excelDayBtn" style="width:100%">Excelで保存</button>
       </div>
       <div class="card card-form">
         <h2>運行を追加</h2>
@@ -237,6 +240,8 @@ html[data-theme="dark"] .seg button.on{background:var(--navy2)}
         <button class="btn btn-sub" id="printMonthBtn" style="width:100%">印刷 / PDF（月次集計）</button>
         <div style="height:8px"></div>
         <button class="btn btn-sub" id="printMonthFullBtn" style="width:100%">月分まとめてPDF（1日ごとページ分け）</button>
+        <div style="height:8px"></div>
+        <button class="btn btn-sub" id="excelMonthBtn" style="width:100%">Excelで保存（この月）</button>
       </div>
       <div class="card card-mdays">
         <h2>日別</h2>
@@ -758,6 +763,48 @@ function printMonthFull(){
   }
   doPrint(h);
 }
+/* ---------- Excel保存 ---------- */
+function xlsxReady(){
+  if (typeof XLSX !== "undefined") return true;
+  alert("Excel保存の部品を読み込めませんでした。ネット接続を確認して、もう一度押してください。");
+  return false;
+}
+const TRIP_HEAD = ["No.","お客様名","代行車(No.)","迎え場所","開始時間","終了時間","送り先","金額","距離(km)","支払い","備考"];
+function tripRow(x, i){
+  return [i+1, x.customer_name || "", x.car_number || "", x.pickup || "", x.start_time ? x.start_time.slice(0,5) : "", x.end_time ? x.end_time.slice(0,5) : "", x.destination || "", x.fare, Number(x.distance_km) || 0, PAY_LABEL[x.payment], x.memo || ""];
+}
+function excelDay(){
+  if (!xlsxReady()) return;
+  const t = totals(dayTrips, dayExpenses);
+  const rows = [["乗務日報", fmtDate(currentDate)], ["キャンセル数", dayCancels], [], TRIP_HEAD];
+  dayTrips.forEach((x, i) => rows.push(tripRow(x, i)));
+  rows.push([]);
+  rows.push(["売上金", t.sales, "現金", t.cash, "カード", t.card, "QR決済", t.qr, "経費", t.exp, "差引", t.balance]);
+  rows.push(["件数", t.count, "走行距離(km)", Number(t.dist.toFixed(1)), "島割", t.islCount + "件 " + yen(t.islSum)]);
+  if (dayExpenses.length){ rows.push([]); rows.push(["経費"]); dayExpenses.forEach(e => rows.push([e.label, e.amount])); }
+  const memo = $("dayMemo").value;
+  if (memo){ rows.push([]); rows.push(["メモ", memo]); }
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(rows), "日報");
+  XLSX.writeFile(wb, "日報_" + currentDate + ".xlsx");
+}
+function excelMonth(){
+  if (!monthData || !xlsxReady()) return;
+  const wb = XLSX.utils.book_new();
+  const dr = [["日付","件数","キャンセル","売上","現金","カード","QR決済","島割件数","島割金額","経費","差引"]];
+  for (const d of monthData.dates){
+    const g = monthData.byDate[d]; const dt = totals(g.trips, g.expenses);
+    dr.push([d, dt.count, g.cancels || 0, dt.sales, dt.cash, dt.card, dt.qr, dt.islCount, dt.islSum, dt.exp, dt.balance]);
+  }
+  const t = monthData.totals;
+  dr.push(["合計", t.count, monthData.cancelsTotal, t.sales, t.cash, t.card, t.qr, t.islCount, t.islSum, t.exp, t.balance]);
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(dr), "日別集計");
+  const tr = [["日付"].concat(TRIP_HEAD)];
+  let cur = "", n = 0;
+  for (const x of monthData.trips){ if (x.date !== cur){ cur = x.date; n = 0; } n++; tr.push([x.date].concat(tripRow(x, n - 1))); }
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(tr), "運行明細");
+  XLSX.writeFile(wb, "日報_" + monthData.y + "年" + monthData.m + "月.xlsx");
+}
 /* ---------- 料金表 ---------- */
 function fareTableHTML(fn, maxBand, label){
   let h = '<table><tr><th>区間</th><th class="num">料金</th></tr>';
@@ -790,8 +837,10 @@ $("toMonthBtn").addEventListener("click", () => { $("dayView").classList.add("hi
 $("backToDay").addEventListener("click", () => { $("monthView").classList.add("hidden"); $("dayView").classList.remove("hidden"); });
 $("monthInput").addEventListener("change", loadMonth);
 $("printDayBtn").addEventListener("click", printDay);
+$("excelDayBtn").addEventListener("click", excelDay);
 $("printMonthBtn").addEventListener("click", printMonth);
 $("printMonthFullBtn").addEventListener("click", printMonthFull);
+$("excelMonthBtn").addEventListener("click", excelMonth);
 $("formModeSeg").querySelectorAll("button").forEach(b => b.addEventListener("click", () => {
   $("formModeSeg").querySelectorAll("button").forEach(x => x.classList.remove("on")); b.classList.add("on");
   const batch = b.dataset.mode === "batch";
