@@ -27,6 +27,7 @@ h2{font-size:21px;margin:2px 0 12px;color:var(--navy)}
 .row{display:flex;gap:14px}
 .row>*{flex:1;min-width:0}
 .row.row-short>*{flex:0 1 132px}
+.row.row-time{gap:28px}
 label{display:block;font-size:16px;color:var(--sub);margin:14px 0 6px}
 input,select,textarea{width:100%;padding:16px;border:1px solid var(--line);border-radius:8px;font-size:20px;background:var(--input);color:var(--txt)}
 textarea{resize:vertical}
@@ -306,7 +307,7 @@ function tripFormHTML(v){
   + '<div><label>車のナンバー</label><input data-f="car_number" value="'+esc(g("car_number"))+'" placeholder="例：4058"></div></div>'
   + '<div class="row"><div><label>迎え場所</label><input data-f="pickup" value="'+esc(g("pickup"))+'"><button type="button" class="btn btn-gps" data-gps="pickup">現在地</button></div>'
   + '<div><label>送り先</label><input data-f="destination" value="'+esc(g("destination"))+'"><button type="button" class="btn btn-gps" data-gps="destination">到着地</button></div></div>'
-  + '<div class="row"><div><label>出発時間</label><input data-f="start_time" type="time" value="'+esc(g("start_time")).slice(0,5)+'"><button type="button" class="btn btn-now" data-now="start_time">今</button></div>'
+  + '<div class="row row-time"><div><label>出発時間</label><input data-f="start_time" type="time" value="'+esc(g("start_time")).slice(0,5)+'"><button type="button" class="btn btn-now" data-now="start_time">今</button></div>'
   + '<div><label>終了時間</label><input data-f="end_time" type="time" value="'+esc(g("end_time")).slice(0,5)+'"><button type="button" class="btn btn-now" data-now="end_time">今</button></div></div>'
   + '<div class="row row-short"><div><label>距離（km）</label><input data-f="distance_km" type="number" step="0.1" min="0" inputmode="decimal" value="'+esc(g("distance_km"))+'"></div>'
   + '<div><label>立ち寄り（分）</label><input data-f="stopover_min" type="number" min="0" inputmode="numeric" value="'+esc(g("stopover_min"))+'"></div></div>'
