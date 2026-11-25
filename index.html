@@ -21,12 +21,13 @@ body{margin:0;font-family:-apple-system,"Hiragino Kaku Gothic ProN","Noto Sans J
 header{background:var(--head);color:#fff;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:20}
 header .ttl{font-weight:700;font-size:22px}
 header button{background:transparent;border:1px solid rgba(255,255,255,.5);color:#fff;border-radius:8px;padding:8px 14px;font-size:14px}
-main{max-width:1180px;margin:0 auto;padding:12px 12px 40px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px 22px;margin-bottom:16px}
+main{max-width:1180px;margin:0 auto;padding:16px 16px 44px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:24px 26px;margin-bottom:20px}
 h2{font-size:21px;margin:2px 0 12px;color:var(--navy)}
-.row{display:flex;gap:10px}
+.row{display:flex;gap:14px}
 .row>*{flex:1;min-width:0}
-label{display:block;font-size:16px;color:var(--sub);margin:10px 0 5px}
+.row.row-short>*{flex:0 1 132px}
+label{display:block;font-size:16px;color:var(--sub);margin:14px 0 6px}
 input,select,textarea{width:100%;padding:16px;border:1px solid var(--line);border-radius:8px;font-size:20px;background:var(--input);color:var(--txt)}
 textarea{resize:vertical}
 .btn{display:inline-block;border:none;border-radius:9px;padding:18px 20px;font-size:19px;font-weight:600;cursor:pointer;text-align:center}
@@ -40,11 +41,11 @@ textarea{resize:vertical}
 .seg button{flex:1;padding:17px 4px;background:var(--input);border:none;font-size:19px;cursor:pointer;color:var(--sub)}
 .seg button.on{background:var(--navy);color:#fff;font-weight:700}
 .seg button.on.green{background:var(--green)}
-.sum-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;font-size:19px}
+.sum-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 18px;font-size:19px}
 .sum-grid .k{color:var(--sub)}
 .sum-grid .v{text-align:right;font-weight:600}
 .sum-big{font-size:30px;font-weight:800;color:var(--navy)}
-.trip{border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:10px;background:var(--card)}
+.trip{border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin-bottom:12px;background:var(--card)}
 .trip .t1{font-weight:700;font-size:21px}
 .trip .t2{color:var(--sub);font-size:18px;margin-top:3px}
 .trip .fare{font-weight:800;color:var(--navy);font-size:22px}
@@ -52,7 +53,7 @@ textarea{resize:vertical}
 .badge.island{background:var(--islbg);color:var(--green)}
 .badge.half{background:var(--halfbg);color:var(--amber)}
 .carnum{display:inline-block;border:1.5px solid var(--sub);border-radius:5px;padding:1px 10px;background:var(--input);color:var(--txt);font-weight:700;letter-spacing:.04em}
-.trip .acts{display:flex;gap:8px;margin-top:8px}
+.trip .acts{display:flex;gap:10px;margin-top:10px}
 .trip .acts button{flex:1}
 .navrow{display:flex;align-items:center;gap:8px;margin-bottom:12px}
 .navrow button{background:var(--input);color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:15px 18px;font-size:19px}
@@ -61,12 +62,12 @@ table{border-collapse:collapse;width:100%;font-size:18px}
 th,td{border:1px solid var(--line);padding:12px 14px;text-align:left}
 th{background:var(--chip)}
 td.num,th.num{text-align:right}
-details{margin-bottom:10px}
+details{margin-bottom:12px}
 summary{cursor:pointer;font-weight:600;color:var(--navy);padding:8px 0}
 .msg{font-size:18px;margin:10px 0;min-height:18px}
 .msg.ok{color:var(--green)}.msg.err{color:var(--red)}
 .hidden{display:none!important}
-.batchrow{border:1px dashed var(--line);border-radius:10px;padding:12px;margin-bottom:12px}
+.batchrow{border:1px dashed var(--line);border-radius:10px;padding:14px;margin-bottom:14px}
 .batchrow .rh{font-weight:700;color:var(--navy);font-size:17px}
 #printArea{display:none}
 @media print{
@@ -81,7 +82,7 @@ summary{cursor:pointer;font-weight:600;color:var(--navy);padding:8px 0}
   #printArea .daybreak{page-break-before:always}
   #printArea .sumline{margin:2px 0}
 }
-.stopwatch{display:flex;align-items:center;gap:14px;flex-wrap:wrap;border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:14px;background:var(--input)}
+.stopwatch{display:flex;align-items:center;gap:14px;flex-wrap:wrap;border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:16px;background:var(--input)}
 .sw-label{font-size:16px;color:var(--sub)}
 .sw-time{font-size:52px;font-weight:800;color:var(--navy);font-variant-numeric:tabular-nums;line-height:1.15}
 .sw-min{font-size:16px;color:var(--sub)}
@@ -95,7 +96,7 @@ html[data-theme="dark"]{color-scheme:dark}
 html[data-theme="dark"] .btn-main{background:var(--navy2)}
 html[data-theme="dark"] .seg button.on{background:var(--navy2)}
 @media (min-width:1000px){
-  #dayView{display:grid;grid-template-columns:minmax(420px,5fr) 7fr;gap:0 14px;align-items:start}
+  #dayView{display:grid;grid-template-columns:minmax(420px,5fr) 7fr;gap:0 18px;align-items:start}
   #dayView .navrow{grid-column:1/-1}
   #dayView .card-summary{grid-column:1;grid-row:2}
   #dayView .card-form{grid-column:1;grid-row:3}
@@ -103,7 +104,7 @@ html[data-theme="dark"] .seg button.on{background:var(--navy2)}
   #dayView .card-exp{grid-column:1;grid-row:4}
   #dayView .card-memo{grid-column:2;grid-row:4}
   #dayView .card-fare{grid-column:1/-1;grid-row:5}
-  #monthView{display:grid;grid-template-columns:minmax(380px,5fr) 7fr;gap:0 14px;align-items:start}
+  #monthView{display:grid;grid-template-columns:minmax(380px,5fr) 7fr;gap:0 18px;align-items:start}
   #monthView .navrow{grid-column:1/-1}
   #monthView .card-msummary{grid-column:1;grid-row:2}
   #monthView .card-mdays{grid-column:2;grid-row:2}
@@ -187,9 +188,16 @@ html[data-theme="dark"] .seg button.on{background:var(--navy2)}
       </div>
       <div class="card card-memo">
         <h2>その日のメモ</h2>
+        <label>キャンセル件数</label>
+        <div class="row">
+          <button type="button" class="btn btn-sub" id="cancelMinus" style="flex:0 0 76px">－</button>
+          <input id="cancelCount" type="number" min="0" inputmode="numeric" value="0" style="text-align:center">
+          <button type="button" class="btn btn-sub" id="cancelPlus" style="flex:0 0 76px">＋</button>
+        </div>
+        <label>メモ</label>
         <textarea id="dayMemo" rows="3"></textarea>
         <div style="height:10px"></div>
-        <button class="btn btn-sub" id="memoSaveBtn" style="width:100%">メモを保存</button>
+        <button class="btn btn-sub" id="memoSaveBtn" style="width:100%">メモ・キャンセルを保存</button>
         <div class="msg" id="memoMsg"></div>
       </div>
       <div class="card card-fare">
@@ -300,7 +308,7 @@ function tripFormHTML(v){
   + '<div><label>送り先</label><input data-f="destination" value="'+esc(g("destination"))+'"><button type="button" class="btn btn-gps" data-gps="destination">到着地</button></div></div>'
   + '<div class="row"><div><label>出発時間</label><input data-f="start_time" type="time" value="'+esc(g("start_time")).slice(0,5)+'"><button type="button" class="btn btn-now" data-now="start_time">今</button></div>'
   + '<div><label>終了時間</label><input data-f="end_time" type="time" value="'+esc(g("end_time")).slice(0,5)+'"><button type="button" class="btn btn-now" data-now="end_time">今</button></div></div>'
-  + '<div class="row"><div><label>距離（km）</label><input data-f="distance_km" type="number" step="0.1" min="0" inputmode="decimal" value="'+esc(g("distance_km"))+'"></div>'
+  + '<div class="row row-short"><div><label>距離（km）</label><input data-f="distance_km" type="number" step="0.1" min="0" inputmode="decimal" value="'+esc(g("distance_km"))+'"></div>'
   + '<div><label>立ち寄り（分）</label><input data-f="stopover_min" type="number" min="0" inputmode="numeric" value="'+esc(g("stopover_min"))+'"></div></div>'
   + '<label>料金の種類</label>' + segHTML("fare_type", [{v:"general",label:"一般料金"},{v:"island",label:"島割"}], g("fare_type","general"))
   + '<label>迎車料金</label>' + segHTML("pickup_fee", [{v:"0",label:"なし"},{v:"500",label:"500円"},{v:"1000",label:"1,000円"}], g("pickup_fee","0"))
@@ -481,7 +489,7 @@ function gpsFill(root, btn){
 <script>
 /* ---------- 日次 ---------- */
 let currentDate = todayStr();
-let dayTrips = [], dayExpenses = [];
+let dayTrips = [], dayExpenses = [], dayCancels = 0;
 function totals(trips, expenses){
   const t = {sales:0, count:trips.length, dist:0, cash:0, card:0, qr:0, islCount:0, islSum:0, halfCount:0, halfSum:0, exp:0};
   for (const x of trips){
@@ -494,10 +502,11 @@ function totals(trips, expenses){
   t.balance = t.sales - t.exp;
   return t;
 }
-function summaryHTML(t){
+function summaryHTML(t, cancels){
   return '<div class="sum-grid">'
   + '<div class="k">売上合計</div><div class="v sum-big">'+yen(t.sales)+'</div>'
   + '<div class="k">件数</div><div class="v">'+t.count+'件</div>'
+  + '<div class="k">キャンセル</div><div class="v">'+(cancels||0)+'件</div>'
   + '<div class="k">走行距離</div><div class="v">'+t.dist.toFixed(1)+'km</div>'
   + '<div class="k">現金</div><div class="v">'+yen(t.cash)+'</div>'
   + '<div class="k">カード</div><div class="v">'+yen(t.card)+'</div>'
@@ -532,9 +541,11 @@ async function loadDay(){
   ]);
   dayTrips = tr.data || []; dayExpenses = ex.data || [];
   dayTrips.sort(byBizOrder);
-  $("daySummary").innerHTML = summaryHTML(totals(dayTrips, dayExpenses));
+  dayCancels = (nt.data && nt.data.cancels != null) ? nt.data.cancels : 0;
+  $("daySummary").innerHTML = summaryHTML(totals(dayTrips, dayExpenses), dayCancels);
   renderTrips(); renderExpenses();
   $("dayMemo").value = nt.data ? nt.data.memo : "";
+  $("cancelCount").value = dayCancels;
 }
 function tripCardHTML(x){
   const badges = (x.fare_type==="island" ? '<span class="badge island">島割</span>' : "")
@@ -657,13 +668,14 @@ async function loadMonth(){
   const byDate = {};
   for (const x of trips){ (byDate[x.date] = byDate[x.date] || {trips:[], expenses:[], memo:""}).trips.push(x); }
   for (const e of expenses){ (byDate[e.date] = byDate[e.date] || {trips:[], expenses:[], memo:""}).expenses.push(e); }
-  for (const n of notes){ (byDate[n.date] = byDate[n.date] || {trips:[], expenses:[], memo:""}).memo = n.memo; }
+  for (const n of notes){ const g = (byDate[n.date] = byDate[n.date] || {trips:[], expenses:[], memo:"", cancels:0}); g.memo = n.memo; g.cancels = n.cancels || 0; }
   const dates = Object.keys(byDate).sort();
-  monthData = {y, m, trips, expenses, byDate, dates, totals: totals(trips, expenses)};
+  monthData = {y, m, trips, expenses, byDate, dates, totals: totals(trips, expenses), cancelsTotal: notes.reduce((s, n) => s + (n.cancels || 0), 0)};
   const t = monthData.totals;
   $("monthSummary").innerHTML = '<div class="sum-grid">'
     + '<div class="k">売上合計</div><div class="v sum-big">'+yen(t.sales)+'</div>'
     + '<div class="k">件数</div><div class="v">'+t.count+'件</div>'
+    + '<div class="k">キャンセル</div><div class="v">'+monthData.cancelsTotal+'件</div>'
     + '<div class="k">稼働日数</div><div class="v">'+dates.length+'日</div>'
     + '<div class="k">走行距離</div><div class="v">'+t.dist.toFixed(1)+'km</div>'
     + '<div class="k">現金</div><div class="v">'+yen(t.cash)+'</div>'
@@ -673,9 +685,9 @@ async function loadMonth(){
     + '<div class="k">半額</div><div class="v">'+t.halfCount+'件／'+yen(t.halfSum)+'</div>'
     + '<div class="k">経費</div><div class="v">'+yen(t.exp)+'</div>'
     + '<div class="k">差引</div><div class="v sum-big">'+yen(t.balance)+'</div></div>';
-  $("monthDays").innerHTML = dates.length ? '<table><tr><th>日付</th><th class="num">件数</th><th class="num">売上</th><th class="num">経費</th><th class="num">差引</th></tr>'
+  $("monthDays").innerHTML = dates.length ? '<table><tr><th>日付</th><th class="num">件数</th><th class="num">キャンセル</th><th class="num">売上</th><th class="num">経費</th><th class="num">差引</th></tr>'
     + dates.map(d => { const dt = totals(byDate[d].trips, byDate[d].expenses);
-      return '<tr><td><a href="#" data-jump="'+d+'">'+fmtDate(d)+'</a></td><td class="num">'+dt.count+'件</td><td class="num">'+yen(dt.sales)+'</td><td class="num">'+yen(dt.exp)+'</td><td class="num">'+yen(dt.balance)+'</td></tr>'; }).join("") + '</table>'
+      return '<tr><td><a href="#" data-jump="'+d+'">'+fmtDate(d)+'</a></td><td class="num">'+dt.count+'件</td><td class="num">'+(byDate[d].cancels||0)+'件</td><td class="num">'+yen(dt.sales)+'</td><td class="num">'+yen(dt.exp)+'</td><td class="num">'+yen(dt.balance)+'</td></tr>'; }).join("") + '</table>'
     : '<div style="color:var(--sub)">この月の記録はありません</div>';
   $("monthDays").querySelectorAll("[data-jump]").forEach(a => a.addEventListener("click", e => {
     e.preventDefault(); currentDate = a.dataset.jump; $("dateInput").value = currentDate;
@@ -691,10 +703,10 @@ function tripTableHTML(trips){
     + '<td>'+esc(x.pickup)+' → '+esc(x.destination)+'</td>'
     + '<td class="nw">'+(Number(x.distance_km)||0).toFixed(1)+'km</td><td class="nw">'+PAY_LABEL[x.payment]+'</td><td class="nw">'+yen(x.fare)+'</td><td>'+esc(x.memo)+'</td></tr>').join("") + '</table>';
 }
-function dayReportHTML(dstr, trips, expenses, memo, breakBefore){
+function dayReportHTML(dstr, trips, expenses, memo, cancels, breakBefore){
   const t = totals(trips, expenses);
   return '<div'+(breakBefore ? ' class="daybreak"' : "")+'><h1>運転代行 日報　'+fmtDate(dstr)+'</h1>'
-  + '<p class="sumline">売上合計 '+yen(t.sales)+' ／ 件数 '+t.count+'件 ／ 走行距離 '+t.dist.toFixed(1)+'km</p>'
+  + '<p class="sumline">売上合計 '+yen(t.sales)+' ／ 件数 '+t.count+'件 ／ 走行距離 '+t.dist.toFixed(1)+'km ／ キャンセル '+(cancels||0)+'件</p>'
   + '<p class="sumline">現金 '+yen(t.cash)+' ／ カード '+yen(t.card)+' ／ QR決済 '+yen(t.qr)+' ／ 島割 '+t.islCount+'件 '+yen(t.islSum)+'</p>'
   + '<p class="sumline">経費 '+yen(t.exp)+' ／ 差引 '+yen(t.balance)+'</p>'
   + '<h2>運行一覧</h2>' + tripTableHTML(trips)
@@ -703,17 +715,17 @@ function dayReportHTML(dstr, trips, expenses, memo, breakBefore){
 }
 function doPrint(html){ $("printArea").innerHTML = html; window.print(); }
 function printDay(){
-  doPrint(dayReportHTML(currentDate, dayTrips, dayExpenses, $("dayMemo").value, false));
+  doPrint(dayReportHTML(currentDate, dayTrips, dayExpenses, $("dayMemo").value, dayCancels, false));
 }
 function monthHeadHTML(){
   const t = monthData.totals;
   return '<h1>運転代行 月次日報　'+monthData.y+'年'+monthData.m+'月</h1>'
-  + '<p class="sumline">売上合計 '+yen(t.sales)+' ／ 件数 '+t.count+'件 ／ 稼働 '+monthData.dates.length+'日 ／ 走行距離 '+t.dist.toFixed(1)+'km</p>'
+  + '<p class="sumline">売上合計 '+yen(t.sales)+' ／ 件数 '+t.count+'件 ／ 稼働 '+monthData.dates.length+'日 ／ 走行距離 '+t.dist.toFixed(1)+'km ／ キャンセル '+monthData.cancelsTotal+'件</p>'
   + '<p class="sumline">現金 '+yen(t.cash)+' ／ カード '+yen(t.card)+' ／ QR決済 '+yen(t.qr)+' ／ 島割 '+t.islCount+'件 '+yen(t.islSum)+'</p>'
   + '<p class="sumline">経費 '+yen(t.exp)+' ／ 差引 '+yen(t.balance)+'</p>'
-  + '<h2>日別</h2><table><tr><th>日付</th><th class="num">件数</th><th class="num">売上</th><th class="num">経費</th><th class="num">差引</th></tr>'
+  + '<h2>日別</h2><table><tr><th>日付</th><th class="num">件数</th><th class="num">キャンセル</th><th class="num">売上</th><th class="num">経費</th><th class="num">差引</th></tr>'
   + monthData.dates.map(d => { const dt = totals(monthData.byDate[d].trips, monthData.byDate[d].expenses);
-    return '<tr><td>'+fmtDate(d)+'</td><td class="num">'+dt.count+'件</td><td class="num">'+yen(dt.sales)+'</td><td class="num">'+yen(dt.exp)+'</td><td class="num">'+yen(dt.balance)+'</td></tr>'; }).join("") + '</table>';
+    return '<tr><td>'+fmtDate(d)+'</td><td class="num">'+dt.count+'件</td><td class="num">'+(monthData.byDate[d].cancels||0)+'件</td><td class="num">'+yen(dt.sales)+'</td><td class="num">'+yen(dt.exp)+'</td><td class="num">'+yen(dt.balance)+'</td></tr>'; }).join("") + '</table>';
 }
 function printMonth(){ if (monthData) doPrint(monthHeadHTML()); }
 function printMonthFull(){
@@ -721,7 +733,7 @@ function printMonthFull(){
   let h = '<h1>運転代行 月次日報（全日分）　'+monthData.y+'年'+monthData.m+'月</h1>' + monthHeadHTML().split("</h1>")[1];
   for (const d of monthData.dates){
     const g = monthData.byDate[d];
-    h += dayReportHTML(d, g.trips, g.expenses, g.memo, true);
+    h += dayReportHTML(d, g.trips, g.expenses, g.memo, g.cancels || 0, true);
   }
   doPrint(h);
 }
@@ -775,12 +787,17 @@ $("expAddBtn").addEventListener("click", async () => {
   sndSave();
   $("expLabel").value = ""; $("expAmount").value = ""; msg.textContent = "追加しました"; msg.className = "msg ok"; loadDay();
 });
+$("cancelMinus").addEventListener("click", () => { $("cancelCount").value = Math.max(0, (parseInt($("cancelCount").value) || 0) - 1); });
+$("cancelPlus").addEventListener("click", () => { $("cancelCount").value = (parseInt($("cancelCount").value) || 0) + 1; });
 $("memoSaveBtn").addEventListener("click", async () => {
   primeAudio();
   const msg = $("memoMsg");
-  const {error} = await sb.from("day_notes").upsert({date: currentDate, memo: $("dayMemo").value}, {onConflict: "date"});
+  dayCancels = Math.max(0, parseInt($("cancelCount").value) || 0);
+  $("cancelCount").value = dayCancels;
+  const {error} = await sb.from("day_notes").upsert({date: currentDate, memo: $("dayMemo").value, cancels: dayCancels}, {onConflict: "date"});
   if (error){ msg.textContent = "保存に失敗しました: " + error.message; msg.className = "msg err"; return; }
   sndSave();
+  $("daySummary").innerHTML = summaryHTML(totals(dayTrips, dayExpenses), dayCancels);
   msg.textContent = "保存しました"; msg.className = "msg ok";
 });
 $("fareTableGeneral").innerHTML = fareTableHTML(bandFareGeneral, 41);
