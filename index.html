@@ -242,6 +242,8 @@ html[data-theme="dark"] .seg button.on{background:var(--navy2)}
         <button class="btn btn-sub" id="printMonthFullBtn" style="width:100%">月分まとめてPDF（1日ごとページ分け）</button>
         <div style="height:8px"></div>
         <button class="btn btn-sub" id="excelMonthBtn" style="width:100%">Excelで保存（この月）</button>
+        <div style="height:8px"></div>
+        <button class="btn btn-sub" id="wageSendBtn" style="width:100%">賃金表へ送信（Googleシート）</button>
       </div>
       <div class="card card-mdays">
         <h2>日別</h2>
@@ -838,6 +840,24 @@ function excelMonth(){
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(tr), "運行明細");
   XLSX.writeFile(wb, "日報_" + monthData.y + "年" + monthData.m + "月.xlsx");
 }
+const WAGE_GAS_URL = "https://script.google.com/macros/s/AKfycbwQ301FP870zCnchhYAD_eI38Vui5fzM_ukU6QKdVQek-5QwKlcVR5khN1zEd_wXs45wA/exec";
+const WAGE_GAS_KEY = "852b99254031364ca1cfe4dd";
+async function sendWage(){
+  if (!monthData) return;
+  const daily = monthData.dates.map(d => ({day: Number(d.slice(8, 10)), sales: totals(monthData.byDate[d].trips, monthData.byDate[d].expenses).sales}));
+  if (!daily.length){ alert("この月にはデータがありません"); return; }
+  const total = daily.reduce((a, x) => a + x.sales, 0);
+  if (!confirm(monthData.y + "年" + monthData.m + "月の売上（合計 " + total.toLocaleString() + "円）を賃金表へ送信します。よろしいですか？")) return;
+  const btn = $("wageSendBtn"); btn.disabled = true;
+  try {
+    await fetch(WAGE_GAS_URL, {method: "POST", mode: "no-cors", headers: {"Content-Type": "text/plain"}, body: JSON.stringify({key: WAGE_GAS_KEY, year: monthData.y, month: monthData.m, daily})});
+    sndSave();
+    alert("賃金表へ送信しました。Googleシートに反映されているか確認してください。");
+  } catch (e) {
+    alert("送信に失敗しました。ネット接続を確認してもう一度押してください。");
+  }
+  btn.disabled = false;
+}
 /* ---------- 料金表 ---------- */
 function fareTableHTML(fn, maxBand, label){
   let h = '<table><tr><th>区間</th><th class="num">料金</th></tr>';
@@ -874,6 +894,7 @@ $("excelDayBtn").addEventListener("click", excelDay);
 $("printMonthBtn").addEventListener("click", printMonth);
 $("printMonthFullBtn").addEventListener("click", printMonthFull);
 $("excelMonthBtn").addEventListener("click", excelMonth);
+$("wageSendBtn").addEventListener("click", sendWage);
 $("formModeSeg").querySelectorAll("button").forEach(b => b.addEventListener("click", () => {
   $("formModeSeg").querySelectorAll("button").forEach(x => x.classList.remove("on")); b.classList.add("on");
   const batch = b.dataset.mode === "batch";
