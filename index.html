@@ -736,12 +736,33 @@ function tripTableHTML(trips){
     + '<td class="r">'+yen(x.fare)+'</td><td class="r">'+(Number(x.distance_km)||0).toFixed(1)+'</td><td>'+esc(x.memo)+'</td></tr>').join("");
   return h + '</table>';
 }
-function dayReportHTML(dstr, trips, expenses, memo, cancels, breakBefore){
+/* ---------- 天気（印刷用・Open-Meteo、石垣島） ---------- */
+const WX_LABEL = {0:"晴れ",1:"晴れ",2:"晴れ時々くもり",3:"くもり",45:"霧",48:"霧",51:"小雨",53:"小雨",55:"雨",56:"雨",57:"雨",61:"小雨",63:"雨",65:"大雨",66:"雨",67:"雨",71:"雪",73:"雪",75:"雪",77:"雪",80:"にわか雨",81:"にわか雨",82:"にわか雨",85:"雪",86:"雪",95:"雷雨",96:"雷雨",99:"雷雨"};
+const wxCache = {};
+async function fetchWeather(dates){
+  const need = dates.filter(d => !(d in wxCache));
+  if (!need.length) return;
+  const sorted = need.slice().sort();
+  const qs = "latitude=24.3365&longitude=124.1752&daily=weather_code&timezone=Asia%2FTokyo&start_date=" + sorted[0] + "&end_date=" + sorted[sorted.length - 1];
+  for (const base of ["https://api.open-meteo.com/v1/forecast?", "https://archive-api.open-meteo.com/v1/archive?"]){
+    try {
+      const r = await fetch(base + qs);
+      if (r.ok){
+        const j = await r.json();
+        const times = (j.daily && j.daily.time) || [], codes = (j.daily && j.daily.weather_code) || [];
+        times.forEach((d, i) => { if (WX_LABEL[codes[i]]) wxCache[d] = WX_LABEL[codes[i]]; });
+      }
+    } catch(e) {}
+    if (dates.every(d => d in wxCache)) break;
+  }
+  for (const d of dates) if (!(d in wxCache)) wxCache[d] = "";
+}
+function dayReportHTML(dstr, trips, expenses, memo, cancels, breakBefore, wx){
   const t = totals(trips, expenses);
   const d = new Date(dstr+"T00:00:00");
   const dateLine = d.getFullYear()+"年"+(d.getMonth()+1)+"月"+d.getDate()+"日（"+WD[d.getDay()]+"）";
   return '<div'+(breakBefore ? ' class="daybreak"' : "")+'>'
-  + '<table class="rheadtab"><tr><td class="rh-left"><span class="rtitle">乗務日報</span><span class="rdate">'+dateLine+'　天候（　　）</span></td>'
+  + '<table class="rheadtab"><tr><td class="rh-left"><span class="rtitle">乗務日報</span><span class="rdate">'+dateLine+'　天候（' + (wx || "　　") + '）</span></td>'
   + '<td class="rh-right"><table class="rcancel"><tr><th>キャンセル数</th></tr><tr><td>'+(cancels||0)+'件</td></tr></table></td></tr></table>'
   + tripTableHTML(trips)
   + '<table class="rtotal"><tr><th>売上金</th><td class="r">'+yen(t.sales)+'</td><th>現金</th><td class="r">'+yen(t.cash)+'</td><th>カード</th><td class="r">'+yen(t.card)+'</td><th>QR決済</th><td class="r">'+yen(t.qr)+'</td><th>経費</th><td class="r">'+yen(t.exp)+'</td><th>差引</th><td class="r">'+yen(t.balance)+'</td></tr></table>'
@@ -750,8 +771,9 @@ function dayReportHTML(dstr, trips, expenses, memo, cancels, breakBefore){
   + (memo ? '<h2>メモ</h2><p>'+esc(memo)+'</p>' : "") + '</div>';
 }
 function doPrint(html){ $("printArea").innerHTML = html; window.print(); }
-function printDay(){
-  doPrint(dayReportHTML(currentDate, dayTrips, dayExpenses, $("dayMemo").value, dayCancels, false));
+async function printDay(){
+  await fetchWeather([currentDate]);
+  doPrint(dayReportHTML(currentDate, dayTrips, dayExpenses, $("dayMemo").value, dayCancels, false, wxCache[currentDate]));
 }
 function monthHeadHTML(){
   const t = monthData.totals;
@@ -764,12 +786,13 @@ function monthHeadHTML(){
     return '<tr><td>'+fmtDate(d)+'</td><td class="num">'+dt.count+'件</td><td class="num">'+(monthData.byDate[d].cancels||0)+'件</td><td class="num">'+yen(dt.sales)+'</td><td class="num">'+yen(dt.exp)+'</td><td class="num">'+yen(dt.balance)+'</td></tr>'; }).join("") + '</table>';
 }
 function printMonth(){ if (monthData) doPrint(monthHeadHTML()); }
-function printMonthFull(){
+async function printMonthFull(){
   if (!monthData) return;
+  await fetchWeather(monthData.dates);
   let h = '<h1>運転代行 月次日報（全日分）　'+monthData.y+'年'+monthData.m+'月</h1>' + monthHeadHTML().split("</h1>")[1];
   for (const d of monthData.dates){
     const g = monthData.byDate[d];
-    h += dayReportHTML(d, g.trips, g.expenses, g.memo, g.cancels || 0, true);
+    h += dayReportHTML(d, g.trips, g.expenses, g.memo, g.cancels || 0, true, wxCache[d]);
   }
   doPrint(h);
 }
