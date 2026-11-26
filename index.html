@@ -718,10 +718,20 @@ async function loadMonth(){
 }
 /* ---------- 印刷 ---------- */
 function tripTableHTML(trips){
-  let h = '<table class="report"><colgroup><col style="width:4%"><col style="width:14%"><col style="width:8%"><col style="width:15%"><col style="width:8%"><col style="width:8%"><col style="width:15%"><col style="width:9%"><col style="width:6%"><col style="width:13%"></colgroup>'
+  const tw = t => { let w = 0; for (const ch of (t || "")) w += /[ -~]/.test(ch) ? 0.55 : 1; return w; };
+  let maxP = 4, maxD = 4;
+  for (const t of trips){ maxP = Math.max(maxP, tw(t.pickup)); maxD = Math.max(maxD, tw(t.destination)); }
+  const wP = Math.min(20, Math.max(10, 4 + maxP * 1.55));
+  const wD = Math.min(20, Math.max(10, 4 + maxD * 1.55));
+  let wMemo = 100 - (4 + 13 + 12 + wP + 8 + 8 + wD + 9 + 6);
+  let wName = 13;
+  if (wMemo > 20){ wName += wMemo - 20; wMemo = 20; }
+  if (wMemo < 12) wMemo = 12;
+  const R = v => Math.round(v * 10) / 10;
+  let h = '<table class="report"><colgroup><col style="width:4%"><col style="width:' + R(wName) + '%"><col style="width:12%"><col style="width:' + R(wP) + '%"><col style="width:8%"><col style="width:8%"><col style="width:' + R(wD) + '%"><col style="width:9%"><col style="width:6%"><col style="width:' + R(wMemo) + '%"></colgroup>'
   + '<tr><th rowspan="2">No.</th><th rowspan="2">お客様名</th><th rowspan="2">代行車<br>(No.)</th><th colspan="2">開始</th><th colspan="2">終了</th><th rowspan="2">金額</th><th rowspan="2">距離<br>(km)</th><th rowspan="2">備考</th></tr>'
   + '<tr><th>迎え場所</th><th>開始時間</th><th>終了時間</th><th>送り先</th></tr>'
-  + trips.map((x,i) => '<tr><td class="c">'+(i+1)+'</td><td>'+esc(x.customer_name)+'</td><td class="c">'+esc(x.car_number || "")+'</td>'
+  + trips.map((x,i) => '<tr><td class="c">'+(i+1)+'</td><td>'+esc(x.customer_name)+'</td><td class="c nw">'+esc(x.car_number || "")+'</td>'
     + '<td>'+esc(x.pickup)+'</td><td class="c">'+(x.start_time ? x.start_time.slice(0,5) : "")+'</td><td class="c">'+(x.end_time ? x.end_time.slice(0,5) : "")+'</td><td>'+esc(x.destination)+'</td>'
     + '<td class="r">'+yen(x.fare)+'</td><td class="r">'+(Number(x.distance_km)||0).toFixed(1)+'</td><td>'+esc(x.memo)+'</td></tr>').join("");
   return h + '</table>';
