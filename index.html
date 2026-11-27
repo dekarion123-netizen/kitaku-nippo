@@ -535,6 +535,7 @@ function totals(trips, expenses){
 function summaryHTML(t, cancels){
   return '<div class="sum-grid">'
   + '<div class="k">売上合計</div><div class="v sum-big">'+yen(t.sales)+'</div>'
+  + '<div class="k">総売上（半額分込み）</div><div class="v">'+yen(t.sales + t.halfSum)+'</div>'
   + '<div class="k">件数</div><div class="v">'+t.count+'件</div>'
   + '<div class="k">キャンセル</div><div class="v">'+(cancels||0)+'件</div>'
   + '<div class="k">走行距離</div><div class="v">'+t.dist.toFixed(1)+'km</div>'
