@@ -260,6 +260,12 @@ const SUPABASE_URL = "https://yoqdoerdhjgygocvgkcf.supabase.co";
 const SUPABASE_KEY = "sb_publishable_dkyThIAovPIO-59BlGf86A_f7TExEeq";
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const $ = id => document.getElementById(id);
+function showOkMsg(el, text){
+  if (!el) return;
+  el.textContent = text; el.className = "msg ok";
+  if (el._okTimer) clearTimeout(el._okTimer);
+  el._okTimer = setTimeout(() => { el.textContent = ""; el.className = "msg"; }, 3000);
+}
 const WD = ["日","月","火","水","木","金","土"];
 const yen = n => "¥" + Math.round(n).toLocaleString("ja-JP");
 function fmtDate(dstr){ const d=new Date(dstr+"T00:00:00"); return (d.getMonth()+1)+"月"+d.getDate()+"日（"+WD[d.getDay()]+"）"; }
@@ -650,7 +656,7 @@ async function saveSingle(){
   const {error} = await sb.from("trips").insert(o);
   if (error){ msg.textContent = "保存に失敗しました: " + error.message; msg.className = "msg err"; if (btn) btn.disabled = false; return; }
   sndSave();
-  msg.textContent = "保存しました"; msg.className = "msg ok";
+  showOkMsg(msg, "保存しました");
   buildSingleForm(); loadDay();
 }
 async function saveBatch(){
@@ -668,7 +674,7 @@ async function saveBatch(){
   const {error} = await sb.from("trips").insert(rows);
   if (error){ msg.textContent = "保存に失敗しました: " + error.message; msg.className = "msg err"; if (bbtn) bbtn.disabled = false; return; }
   sndSave();
-  msg.textContent = rows.length + "件を保存しました"; msg.className = "msg ok";
+  showOkMsg(msg, rows.length + "件を保存しました");
   buildBatchForm(); loadDay();
 }
 </script>
@@ -909,7 +915,7 @@ $("expAddBtn").addEventListener("click", async () => {
   const {error} = await sb.from("expenses").insert({date: currentDate, label, amount});
   if (error){ msg.textContent = "保存に失敗しました: " + error.message; msg.className = "msg err"; return; }
   sndSave();
-  $("expLabel").value = ""; $("expAmount").value = ""; msg.textContent = "追加しました"; msg.className = "msg ok"; loadDay();
+  $("expLabel").value = ""; $("expAmount").value = ""; showOkMsg(msg, "追加しました"); loadDay();
 });
 $("cancelMinus").addEventListener("click", () => { $("cancelCount").value = Math.max(0, (parseInt($("cancelCount").value) || 0) - 1); });
 $("cancelPlus").addEventListener("click", () => { $("cancelCount").value = (parseInt($("cancelCount").value) || 0) + 1; });
@@ -922,7 +928,7 @@ $("memoSaveBtn").addEventListener("click", async () => {
   if (error){ msg.textContent = "保存に失敗しました: " + error.message; msg.className = "msg err"; return; }
   sndSave();
   $("daySummary").innerHTML = summaryHTML(totals(dayTrips, dayExpenses), dayCancels);
-  msg.textContent = "保存しました"; msg.className = "msg ok";
+  showOkMsg(msg, "保存しました");
 });
 $("fareTableGeneral").innerHTML = fareTableHTML(bandFareGeneral, 41);
 $("fareTableIsland").innerHTML = fareTableHTML(bandFareIsland, 50);
