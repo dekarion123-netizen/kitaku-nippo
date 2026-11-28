@@ -397,6 +397,7 @@ function refreshForm(root){
 }
 function fmtCarNumber(v, final){
   v = String(v || "");
+  if (!final && /[a-zA-Z]/.test(v)) return v;
   const kana = (v.match(/^[ぁ-ん]/) || [""])[0];
   const d = v.replace(/[^0-9]/g, "").slice(0, 4);
   let num = d;
