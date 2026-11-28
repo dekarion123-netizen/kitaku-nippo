@@ -494,8 +494,27 @@ function tone(freq, at, dur){
     o.start(t0); o.stop(t0 + dur + 0.05);
   } catch(e){}
 }
-function sndTap(){ primeAudio(); tone(880, 0, 0.08); }
-function sndSave(){ primeAudio(); tone(740, 0, 0.09); tone(1175, 0.1, 0.14); }
+const sndBuf = {};
+function loadSnd(name, url){
+  fetch(url).then(r => r.arrayBuffer()).then(b => {
+    primeAudio();
+    if (AC) AC.decodeAudioData(b, buf => { sndBuf[name] = buf; }, () => {});
+  }).catch(() => {});
+}
+function playBuf(name){
+  const buf = sndBuf[name];
+  if (!buf || !AC) return false;
+  try {
+    const src = AC.createBufferSource(); src.buffer = buf;
+    const g = AC.createGain(); g.gain.value = 1.0;
+    src.connect(g); g.connect(AC.destination); src.start();
+    return true;
+  } catch(e){ return false; }
+}
+function sndTap(){ primeAudio(); if (!playBuf("tap")) tone(880, 0, 0.08); }
+function sndSave(){ primeAudio(); if (!playBuf("save")) { tone(740, 0, 0.09); tone(1175, 0.1, 0.14); } }
+function sndError(){ primeAudio(); if (!playBuf("err")) { tone(220, 0, 0.18); tone(220, 0.25, 0.18); } }
+loadSnd("tap", "click.mp3"); loadSnd("save", "save.mp3"); loadSnd("err", "error.mp3");
 document.addEventListener("click", e => {
   if (e.target.closest && e.target.closest("button, summary")) sndTap();
 }, true);
@@ -554,7 +573,7 @@ function gpsFill(root, btn){
   const finish = async () => {
     if (done) return; done = true;
     if (wid !== null) navigator.geolocation.clearWatch(wid);
-    if (!best){ alert("位置情報が取得できませんでした"); btn.textContent = old; btn.disabled = false; return; }
+    if (!best){ sndError(); alert("位置情報が取得できませんでした"); btn.textContent = old; btn.disabled = false; return; }
     const {latitude:lat, longitude:lon} = best.coords;
     const place = await resolvePlaceName(lat, lon);
     if (place) {
@@ -666,7 +685,7 @@ function startEdit(id){
     primeAudio();
     const o = gatherForm(form); o.date = currentDate;
     const {error} = await sb.from("trips").update(o).eq("id", id);
-    if (error){ card.querySelector(".msg").textContent = "保存に失敗しました: " + error.message; card.querySelector(".msg").className = "msg err"; ebtn.disabled = false; return; }
+    if (error){ card.querySelector(".msg").textContent = "保存に失敗しました: " + error.message; card.querySelector(".msg").className = "msg err"; sndError(); ebtn.disabled = false; return; }
     sndSave();
     loadDay();
   });
@@ -675,7 +694,7 @@ function startEdit(id){
 async function delTrip(id){
   if (!confirm("この記録を削除しますか？")) return;
   const {error} = await sb.from("trips").delete().eq("id", id);
-  if (error){ alert("削除に失敗しました: " + error.message); return; }
+  if (error){ sndError(); alert("削除に失敗しました: " + error.message); return; }
   loadDay();
 }
 function renderExpenses(){
@@ -709,9 +728,9 @@ async function saveSingle(){
   const form = $("singleFormWrap").querySelector(".tripform");
   const o = gatherForm(form); o.date = currentDate;
   const msg = $("formMsg");
-  if (isEmptyTrip(o)){ msg.textContent = "何か入力してから保存してください"; msg.className = "msg err"; if (btn) btn.disabled = false; return; }
+  if (isEmptyTrip(o)){ msg.textContent = "何か入力してから保存してください"; msg.className = "msg err"; sndError(); if (btn) btn.disabled = false; return; }
   const {error} = await sb.from("trips").insert(o);
-  if (error){ msg.textContent = "保存に失敗しました: " + error.message; msg.className = "msg err"; if (btn) btn.disabled = false; return; }
+  if (error){ msg.textContent = "保存に失敗しました: " + error.message; msg.className = "msg err"; sndError(); if (btn) btn.disabled = false; return; }
   sndSave();
   showOkMsg(msg, "保存しました");
   buildSingleForm(); loadDay();
@@ -727,9 +746,9 @@ async function saveBatch(){
     if (!isEmptyTrip(o)) rows.push(o);
   });
   const msg = $("formMsg");
-  if (!rows.length){ msg.textContent = "入力された行がありません"; msg.className = "msg err"; if (bbtn) bbtn.disabled = false; return; }
+  if (!rows.length){ msg.textContent = "入力された行がありません"; msg.className = "msg err"; sndError(); if (bbtn) bbtn.disabled = false; return; }
   const {error} = await sb.from("trips").insert(rows);
-  if (error){ msg.textContent = "保存に失敗しました: " + error.message; msg.className = "msg err"; if (bbtn) bbtn.disabled = false; return; }
+  if (error){ msg.textContent = "保存に失敗しました: " + error.message; msg.className = "msg err"; sndError(); if (bbtn) bbtn.disabled = false; return; }
   sndSave();
   showOkMsg(msg, rows.length + "件を保存しました");
   buildBatchForm(); loadDay();
@@ -864,7 +883,7 @@ async function printMonthFull(){
 /* ---------- Excel保存 ---------- */
 function xlsxReady(){
   if (typeof XLSX !== "undefined") return true;
-  alert("Excel保存の部品を読み込めませんでした。ネット接続を確認して、もう一度押してください。");
+  sndError(); alert("Excel保存の部品を読み込めませんでした。ネット接続を確認して、もう一度押してください。");
   return false;
 }
 const TRIP_HEAD = ["No.","お客様名","代行車(No.)","迎え場所","開始時間","終了時間","送り先","金額","距離(km)","支払い","備考"];
@@ -917,7 +936,7 @@ async function sendWage(){
     sndSave();
     alert("賃金表へ送信しました。Googleシートに反映されているか確認してください。");
   } catch (e) {
-    alert("送信に失敗しました。ネット接続を確認してもう一度押してください。");
+    sndError(); alert("送信に失敗しました。ネット接続を確認してもう一度押してください。");
   }
   btn.disabled = false;
 }
@@ -942,7 +961,7 @@ function showApp(){
 $("loginBtn").addEventListener("click", async () => {
   const msg = $("loginMsg");
   const {error} = await sb.auth.signInWithPassword({email: $("loginEmail").value.trim(), password: $("loginPass").value});
-  if (error){ msg.textContent = "ログインできませんでした。メールアドレスとパスワードを確認してください。"; msg.className = "msg err"; return; }
+  if (error){ msg.textContent = "ログインできませんでした。メールアドレスとパスワードを確認してください。"; msg.className = "msg err"; sndError(); return; }
   showApp();
 });
 $("logoutBtn").addEventListener("click", async () => { await sb.auth.signOut(); showLogin(); });
@@ -968,9 +987,9 @@ $("expAddBtn").addEventListener("click", async () => {
   primeAudio();
   const label = $("expLabel").value.trim(); const amount = parseInt($("expAmount").value) || 0;
   const msg = $("expMsg");
-  if (!label || !amount){ msg.textContent = "内容と金額を入力してください"; msg.className = "msg err"; return; }
+  if (!label || !amount){ msg.textContent = "内容と金額を入力してください"; msg.className = "msg err"; sndError(); return; }
   const {error} = await sb.from("expenses").insert({date: currentDate, label, amount});
-  if (error){ msg.textContent = "保存に失敗しました: " + error.message; msg.className = "msg err"; return; }
+  if (error){ msg.textContent = "保存に失敗しました: " + error.message; msg.className = "msg err"; sndError(); return; }
   sndSave();
   $("expLabel").value = ""; $("expAmount").value = ""; showOkMsg(msg, "追加しました"); loadDay();
 });
@@ -982,7 +1001,7 @@ $("memoSaveBtn").addEventListener("click", async () => {
   dayCancels = Math.max(0, parseInt($("cancelCount").value) || 0);
   $("cancelCount").value = dayCancels;
   const {error} = await sb.from("day_notes").upsert({date: currentDate, memo: $("dayMemo").value, cancels: dayCancels}, {onConflict: "date"});
-  if (error){ msg.textContent = "保存に失敗しました: " + error.message; msg.className = "msg err"; return; }
+  if (error){ msg.textContent = "保存に失敗しました: " + error.message; msg.className = "msg err"; sndError(); return; }
   sndSave();
   $("daySummary").innerHTML = summaryHTML(totals(dayTrips, dayExpenses), dayCancels);
   showOkMsg(msg, "保存しました");
