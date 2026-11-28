@@ -56,6 +56,10 @@ textarea{resize:vertical}
 .badge.island{background:var(--islbg);color:var(--green)}
 .badge.half{background:var(--halfbg);color:var(--amber)}
 .carnum-row{display:flex;gap:6px}
+.sw-mini{display:flex;align-items:center;gap:8px}
+.sw-time{font-weight:700;font-size:20px;font-variant-numeric:tabular-nums;min-width:48px}
+.row.row-short>.sw-cell{flex:0 1 176px}
+[data-swtoggle].on{background:#b3402f;color:#fff}
 .carnum-row input{padding-left:8px;padding-right:8px}
 .car-kana{flex:0 0 64px;text-align:center}
 .carnum{display:inline-block;border:1.5px solid var(--sub);border-radius:5px;padding:1px 10px;background:var(--input);color:var(--txt);font-weight:700;letter-spacing:.04em}
@@ -343,7 +347,8 @@ function tripFormHTML(v){
   + '<div class="row row-time"><div><label>出発時間</label><input data-f="start_time" type="time" value="'+esc(g("start_time")).slice(0,5)+'"><button type="button" class="btn btn-now" data-now="start_time">今</button></div>'
   + '<div><label>終了時間</label><input data-f="end_time" type="time" value="'+esc(g("end_time")).slice(0,5)+'"><button type="button" class="btn btn-now" data-now="end_time">今</button></div></div>'
   + '<div class="row row-short"><div><label>距離（km）</label><input data-f="distance_km" type="number" step="0.1" min="0" inputmode="decimal" value="'+esc(g("distance_km"))+'"></div>'
-  + '<div><label>立ち寄り（分）</label><input data-f="stopover_min" type="number" min="0" inputmode="numeric" value="'+esc(g("stopover_min"))+'"></div></div>'
+  + '<div><label>立ち寄り（分）</label><input data-f="stopover_min" type="number" min="0" inputmode="numeric" value="'+esc(g("stopover_min"))+'"></div>'
+  + '<div class="sw-cell"><label>ストップウォッチ</label><div class="sw-mini"><span class="sw-time" data-swtime>0:00</span><button type="button" class="btn btn-sub btn-small" data-swtoggle>スタート</button></div></div></div>'
   + '<label>料金の種類</label>' + segHTML("fare_type", [{v:"general",label:"一般料金"},{v:"island",label:"島割"}], g("fare_type","general"))
   + '<label>迎車料金</label>' + segHTML("pickup_fee", [{v:"0",label:"なし"},{v:"500",label:"500円"},{v:"1000",label:"1,000円"}], g("pickup_fee","0"))
   + '<div class="row"><div><label>支払い</label><select data-f="payment">'
@@ -445,6 +450,27 @@ function wireForm(root){
     root.querySelector('[data-f="'+b.dataset.now+'"]').value = nowTime();
   }));
   root.querySelectorAll("[data-gps]").forEach(b => b.addEventListener("click", () => gpsFill(root, b)));
+  const swBtn = root.querySelector("[data-swtoggle]");
+  if (swBtn){
+    const swTime = root.querySelector("[data-swtime]");
+    const fmtSw = ms => { const sec = Math.floor(ms / 1000); return Math.floor(sec / 60) + ":" + String(sec % 60).padStart(2, "0"); };
+    swBtn.addEventListener("click", () => {
+      if (!swBtn._running){
+        swBtn._running = true; swBtn._start = Date.now();
+        swBtn.textContent = "ストップ"; swBtn.classList.add("on");
+        swTime.textContent = "0:00";
+        swBtn._iv = setInterval(() => { swTime.textContent = fmtSw(Date.now() - swBtn._start); }, 250);
+      } else {
+        swBtn._running = false;
+        clearInterval(swBtn._iv);
+        const mins = Math.round((Date.now() - swBtn._start) / 60000);
+        const inp = root.querySelector('[data-f="stopover_min"]');
+        if (inp && mins > 0) inp.value = (parseInt(inp.value) || 0) + mins;
+        swBtn.textContent = "スタート"; swBtn.classList.remove("on");
+        refreshForm(root);
+      }
+    });
+  }
   refreshForm(root);
 }
 /* ---------- 操作音（押せたか分かるように） ---------- */
