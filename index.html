@@ -56,7 +56,8 @@ textarea{resize:vertical}
 .badge.island{background:var(--islbg);color:var(--green)}
 .badge.half{background:var(--halfbg);color:var(--amber)}
 .carnum-row{display:flex;gap:6px}
-.car-kana{flex:0 0 44px;text-align:center}
+.carnum-row input{padding-left:8px;padding-right:8px}
+.car-kana{flex:0 0 56px;text-align:center}
 .carnum{display:inline-block;border:1.5px solid var(--sub);border-radius:5px;padding:1px 10px;background:var(--input);color:var(--txt);font-weight:700;letter-spacing:.04em}
 .trip .acts{display:flex;gap:10px;margin-top:10px}
 .trip .acts button{flex:1}
@@ -116,7 +117,8 @@ html[data-theme="dark"]{color-scheme:dark}
 html[data-theme="dark"] .btn-main{background:var(--navy2)}
 html[data-theme="dark"] .seg button.on{background:var(--navy2)}
 @media (min-width:1000px){
-  #dayView{display:grid;grid-template-columns:minmax(420px,5fr) 7fr;gap:0 18px;align-items:start}
+  #dayView{display:grid;grid-template-columns:minmax(460px,6fr) 6fr;gap:0 18px;align-items:start}
+  #dayView>*{min-width:0}
   #dayView .navrow{grid-column:1/-1}
   #dayView .card-summary{grid-column:1;grid-row:2}
   #dayView .card-form{grid-column:1;grid-row:3}
