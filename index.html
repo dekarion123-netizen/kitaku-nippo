@@ -56,11 +56,6 @@ textarea{resize:vertical}
 .badge.island{background:var(--islbg);color:var(--green)}
 .badge.half{background:var(--halfbg);color:var(--amber)}
 .carnum-row{display:flex;gap:6px}
-.row.row-top>*:first-child{flex:1}
-.row.row-top>*:last-child{flex:1.3}
-.carnum-row input{padding-left:8px;padding-right:8px}
-.row.row-top{gap:10px}
-.row.row-top input{padding-left:10px;padding-right:10px}
 .car-kana{flex:0 0 44px;text-align:center}
 .carnum{display:inline-block;border:1.5px solid var(--sub);border-radius:5px;padding:1px 10px;background:var(--input);color:var(--txt);font-weight:700;letter-spacing:.04em}
 .trip .acts{display:flex;gap:10px;margin-top:10px}
@@ -339,8 +334,8 @@ function tripFormHTML(v){
   v = v || {};
   const g = (k,d) => (v[k] != null && v[k] !== "" ? v[k] : (d||""));
   return '<div class="tripform">'
-  + '<div class="row row-top"><div><label>お客様名</label><input data-f="customer_name" value="'+esc(g("customer_name"))+'" placeholder="お客様名"></div>'
-  + '<div><label>車のナンバー</label><div class="carnum-row"><input data-f="car_kana" class="car-kana" maxlength="1" value="'+esc(splitCarNumber(g("car_number")).kana)+'" placeholder="さ"><input data-f="car_number" inputmode="numeric" value="'+esc(splitCarNumber(g("car_number")).num)+'" placeholder="例：7272"></div></div></div>'
+  + '<div class="row"><div><label>お客様名</label><input data-f="customer_name" value="'+esc(g("customer_name"))+'" placeholder="お客様名"></div></div>'
+  + '<div class="row"><div><label>車のナンバー</label><div class="carnum-row"><input data-f="car_kana" class="car-kana" maxlength="1" value="'+esc(splitCarNumber(g("car_number")).kana)+'" placeholder="さ"><input data-f="car_number" inputmode="numeric" value="'+esc(splitCarNumber(g("car_number")).num)+'" placeholder="例：7272"></div></div></div>'
   + '<div class="row"><div><label>迎え場所</label><input data-f="pickup" value="'+esc(g("pickup"))+'"><button type="button" class="btn btn-gps" data-gps="pickup">現在地</button></div>'
   + '<div><label>送り先</label><input data-f="destination" value="'+esc(g("destination"))+'"><button type="button" class="btn btn-gps" data-gps="destination">到着地</button></div></div>'
   + '<div class="row row-time"><div><label>出発時間</label><input data-f="start_time" type="time" value="'+esc(g("start_time")).slice(0,5)+'"><button type="button" class="btn btn-now" data-now="start_time">今</button></div>'
