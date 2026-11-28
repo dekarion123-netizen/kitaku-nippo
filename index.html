@@ -55,6 +55,8 @@ textarea{resize:vertical}
 .badge{display:inline-block;font-size:14px;padding:3px 10px;border-radius:99px;background:var(--chip);color:var(--chiptxt);margin-left:6px;vertical-align:2px}
 .badge.island{background:var(--islbg);color:var(--green)}
 .badge.half{background:var(--halfbg);color:var(--amber)}
+.carnum-row{display:flex;gap:8px}
+.car-kana{flex:0 0 60px;text-align:center}
 .carnum{display:inline-block;border:1.5px solid var(--sub);border-radius:5px;padding:1px 10px;background:var(--input);color:var(--txt);font-weight:700;letter-spacing:.04em}
 .trip .acts{display:flex;gap:10px;margin-top:10px}
 .trip .acts button{flex:1}
@@ -333,7 +335,7 @@ function tripFormHTML(v){
   const g = (k,d) => (v[k] != null && v[k] !== "" ? v[k] : (d||""));
   return '<div class="tripform">'
   + '<div class="row"><div><label>お客様名</label><input data-f="customer_name" value="'+esc(g("customer_name"))+'" placeholder="お客様名"></div>'
-  + '<div><label>車のナンバー</label><input data-f="car_number" inputmode="numeric" value="'+esc(g("car_number"))+'" placeholder="例：7272"></div></div>'
+  + '<div><label>車のナンバー</label><div class="carnum-row"><input data-f="car_kana" class="car-kana" maxlength="1" value="'+esc(splitCarNumber(g("car_number")).kana)+'" placeholder="さ"><input data-f="car_number" inputmode="numeric" value="'+esc(splitCarNumber(g("car_number")).num)+'" placeholder="例：7272"></div></div></div>'
   + '<div class="row"><div><label>迎え場所</label><input data-f="pickup" value="'+esc(g("pickup"))+'"><button type="button" class="btn btn-gps" data-gps="pickup">現在地</button></div>'
   + '<div><label>送り先</label><input data-f="destination" value="'+esc(g("destination"))+'"><button type="button" class="btn btn-gps" data-gps="destination">到着地</button></div></div>'
   + '<div class="row row-time"><div><label>出発時間</label><input data-f="start_time" type="time" value="'+esc(g("start_time")).slice(0,5)+'"><button type="button" class="btn btn-now" data-now="start_time">今</button></div>'
@@ -362,7 +364,7 @@ function gatherForm(root){
   const q = f => root.querySelector('[data-f="'+f+'"]');
   const o = {
     customer_name: q("customer_name").value.trim(),
-    car_number: fmtCarNumber(q("car_number").value, true),
+    car_number: combineCarNumber(q("car_kana").value, fmtCarNumber(q("car_number").value, true)),
     pickup: q("pickup").value.trim(),
     destination: q("destination").value.trim(),
     start_time: q("start_time").value || null,
@@ -395,6 +397,15 @@ function refreshForm(root){
   const pv = root.querySelector("[data-memopreview]");
   if (pv) pv.textContent = buildMemo(tmp) || "（なし）";
 }
+function splitCarNumber(v){
+  v = String(v || "");
+  const m = v.match(/^([ぁ-ん])\s*(.*)$/);
+  return m ? {kana: m[1], num: m[2]} : {kana: "", num: v};
+}
+function combineCarNumber(kana, num){
+  kana = String(kana || "").trim(); num = String(num || "");
+  return kana ? (num ? kana + " " + num : kana) : num;
+}
 function fmtCarNumber(v, final){
   v = String(v || "");
   if (!final && /[a-zA-Z]/.test(v)) return v;
@@ -417,6 +428,11 @@ function wireForm(root){
     el.addEventListener("input", () => {
       if (el.dataset.f === "fare") root.dataset.fareOverride = "1";
       if (el.dataset.f === "car_number"){ const fv = fmtCarNumber(el.value, false); if (fv !== el.value) el.value = fv; }
+      if (el.dataset.f === "car_kana" && !/[a-zA-Z]/.test(el.value)){
+        const kv = el.value.replace(/[^ぁ-ん]/g, "").slice(0, 1);
+        if (kv !== el.value) el.value = kv;
+        if (kv.length === 1){ const numEl = root.querySelector('[data-f="car_number"]'); if (numEl) numEl.focus(); }
+      }
       refreshForm(root);
     });
     if (el.dataset.f === "car_number") el.addEventListener("change", () => { el.value = fmtCarNumber(el.value, true); });
