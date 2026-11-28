@@ -333,7 +333,7 @@ function tripFormHTML(v){
   const g = (k,d) => (v[k] != null && v[k] !== "" ? v[k] : (d||""));
   return '<div class="tripform">'
   + '<div class="row"><div><label>お客様名</label><input data-f="customer_name" value="'+esc(g("customer_name"))+'" placeholder="お客様名"></div>'
-  + '<div><label>車のナンバー</label><input data-f="car_number" value="'+esc(g("car_number"))+'" placeholder="例：4058"></div></div>'
+  + '<div><label>車のナンバー</label><input data-f="car_number" inputmode="numeric" value="'+esc(g("car_number"))+'" placeholder="例：7272"></div></div>'
   + '<div class="row"><div><label>迎え場所</label><input data-f="pickup" value="'+esc(g("pickup"))+'"><button type="button" class="btn btn-gps" data-gps="pickup">現在地</button></div>'
   + '<div><label>送り先</label><input data-f="destination" value="'+esc(g("destination"))+'"><button type="button" class="btn btn-gps" data-gps="destination">到着地</button></div></div>'
   + '<div class="row row-time"><div><label>出発時間</label><input data-f="start_time" type="time" value="'+esc(g("start_time")).slice(0,5)+'"><button type="button" class="btn btn-now" data-now="start_time">今</button></div>'
@@ -362,7 +362,7 @@ function gatherForm(root){
   const q = f => root.querySelector('[data-f="'+f+'"]');
   const o = {
     customer_name: q("customer_name").value.trim(),
-    car_number: q("car_number").value.trim(),
+    car_number: fmtCarNumber(q("car_number").value, true),
     pickup: q("pickup").value.trim(),
     destination: q("destination").value.trim(),
     start_time: q("start_time").value || null,
@@ -395,6 +395,15 @@ function refreshForm(root){
   const pv = root.querySelector("[data-memopreview]");
   if (pv) pv.textContent = buildMemo(tmp) || "（なし）";
 }
+function fmtCarNumber(v, final){
+  v = String(v || "");
+  const kana = (v.match(/^[ぁ-ん]/) || [""])[0];
+  const d = v.replace(/[^0-9]/g, "").slice(0, 4);
+  let num = d;
+  if (d.length === 4) num = d.slice(0, 2) + "-" + d.slice(2);
+  else if (d.length === 3) num = final ? (d.slice(0, 1) + "-" + d.slice(1)) : (d.slice(0, 2) + "-" + d.slice(2));
+  return kana ? (num ? kana + " " + num : kana) : num;
+}
 function wireForm(root){
   root.querySelectorAll("[data-seg]").forEach(seg => {
     seg.querySelectorAll("button").forEach(b => b.addEventListener("click", () => {
@@ -406,8 +415,10 @@ function wireForm(root){
   root.querySelectorAll("[data-f]").forEach(el => {
     el.addEventListener("input", () => {
       if (el.dataset.f === "fare") root.dataset.fareOverride = "1";
+      if (el.dataset.f === "car_number"){ const fv = fmtCarNumber(el.value, false); if (fv !== el.value) el.value = fv; }
       refreshForm(root);
     });
+    if (el.dataset.f === "car_number") el.addEventListener("change", () => { el.value = fmtCarNumber(el.value, true); });
   });
   const rf = root.querySelector("[data-resetfare]");
   if (rf) rf.addEventListener("click", e => { e.preventDefault(); delete root.dataset.fareOverride; refreshForm(root); });
